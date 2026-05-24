@@ -30,7 +30,7 @@
             flex-direction: column;
             justify-content: space-between;
             align-items: center;
-            padding: clamp(10px, 3vh, 25px) 24px clamp(20px, 4vh, 40px) 24px;
+            padding: clamp(10px, 2vh, 25px) 24px clamp(15px, 3vh, 35px) 24px;
             position: relative;
             min-height: 100vh;
         }
@@ -45,19 +45,19 @@
         }
 
         .decor-top-right {
-            width: clamp(140px, 28vh, 240px);
-            height: clamp(140px, 28vh, 240px);
-            top: clamp(-90px, -12vh, -110px);
-            right: clamp(-50px, -8vh, -70px);
+            width: clamp(120px, 24vh, 220px);
+            height: clamp(120px, 24vh, 220px);
+            top: clamp(-80px, -10vh, -100px);
+            right: clamp(-45px, -7vh, -65px);
             transform: rotate(25deg);
             border: 4px solid #ffffff;
             outline: 2px solid #000000;
         }
 
         .decor-left {
-            width: clamp(110px, 22vh, 190px);
-            height: clamp(110px, 22vh, 190px);
-            left: clamp(-70px, -10vh, -100px);
+            width: clamp(100px, 20vh, 170px);
+            height: clamp(100px, 20vh, 170px);
+            left: clamp(-60px, -8vh, -90px);
             top: 45%;
             transform: translateY(-50%) rotate(35deg);
             border: 4px solid #ffffff;
@@ -65,16 +65,16 @@
         }
 
         .decor-bottom-right {
-            width: clamp(130px, 25vh, 210px);
-            height: clamp(130px, 25vh, 210px);
-            bottom: clamp(-70px, -10vh, -90px);
-            right: clamp(-30px, -6vh, -50px);
+            width: clamp(110px, 22vh, 190px);
+            height: clamp(110px, 22vh, 190px);
+            bottom: clamp(-60px, -8vh, -80px);
+            right: clamp(-25px, -5vh, -45px);
             transform: rotate(15deg);
             background-color: transparent;
-            border: clamp(8px, 1.8vh, 14px) solid #000000;
+            border: clamp(6px, 1.5vh, 12px) solid #000000;
         }
 
-        /* Шапка приложения — Кнопка назад поднята максимально выше */
+        /* Шапка приложения с кнопкой Назад */
         .header-section {
             width: 100%;
             max-width: 400px;
@@ -82,6 +82,7 @@
             justify-content: flex-start;
             z-index: 3;
             min-height: 40px;
+            flex-shrink: 0;
         }
 
         .btn-back {
@@ -111,33 +112,40 @@
             transform: scale(0.95);
         }
 
-        /* Главный стабильный контейнер. Исключает любые прыжки элементов */
+        /* Главный стабильный контейнер — теперь подстраивается под экран и защищает от переполнения */
         .screen-container {
             width: 100%;
             max-width: 400px;
-            height: 460px; /* Фиксированная высота рабочей зоны */
-            display: relative;
+            flex: 1;
+            position: relative;
             z-index: 2;
-            margin: auto 0;
+            margin: clamp(10px, 2vh, 25px) 0;
+            overflow-y: auto; /* Включает внутренний безопасный скролл, если экран экстремально мал */
+            scrollbar-width: none; /* Убирает скроллбар в Firefox */
+        }
+
+        .screen-container::-webkit-scrollbar {
+            display: none; /* Убирает скроллбар в Chrome/Safari */
         }
 
         /* Общие правила для экранов */
         .app-screen {
             position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-            max-width: 400px;
-            height: 460px;
+            height: 100%;
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
             opacity: 0;
             visibility: hidden;
             pointer-events: none;
-            transition: opacity 0.35s ease, transform 0.35s ease, visibility 0.35s;
-            transform: translateY(10px);
+            transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+            transform: translateY(8px);
         }
 
-        /* Активация экрана с плавной проявкой */
+        /* Активация экрана */
         .app-screen.active {
             opacity: 1;
             visibility: visible;
@@ -156,86 +164,85 @@
 
         .welcome-brand {
             text-align: center;
-            margin-bottom: 50px;
+            margin-bottom: clamp(30px, 5vh, 55px);
         }
 
         .welcome-logo {
-            width: clamp(110px, 16vh, 145px);
+            width: clamp(110px, 15vh, 140px);
             height: auto;
             display: block;
             margin: 0 auto 15px auto;
         }
 
         .welcome-subtitle {
-            font-size: clamp(16px, 2.3vh, 18px);
+            font-size: clamp(15px, 2vh, 17px);
             font-weight: 300;
             color: #2c2c2c;
             letter-spacing: 0.5px;
         }
 
-        /* ================= ОБЩАЯ ШАПКА ДЛЯ ШАГОВ РЕГИСТРАЦИИ ================= */
+        /* ================= ШАПКА ДЛЯ ШАГОВ РЕГИСТРАЦИИ ================= */
         .step-title {
-            font-size: 18px;
+            font-size: clamp(16px, 2.2vh, 18px);
             font-weight: 300;
             color: #000000;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .brand-row {
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 25px;
+            margin-bottom: clamp(15px, 3vh, 25px);
         }
 
         .logo-mini {
-            height: 42px;
+            height: clamp(34px, 4vh, 42px);
             width: auto;
         }
 
         .brand-divider {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 300;
             color: #a0a0a0;
         }
 
         .brand-sub {
-            font-size: 18px;
+            font-size: clamp(16px, 2.2vh, 18px);
             font-weight: 300;
             color: #000000;
         }
 
         .info-block {
-            margin-bottom: 20px;
-            min-height: 46px; /* Защита от прыжка строки описания */
+            margin-bottom: clamp(12px, 2.5vh, 22px);
         }
 
         .info-title {
-            font-size: 18px;
+            font-size: clamp(16px, 2.2vh, 18px);
             font-weight: 300;
             color: #000000;
             margin-bottom: 2px;
         }
 
         .info-desc {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 300;
             color: #a0a0a0;
         }
 
-        /* Поля ввода и группы ввода */
+        /* Поля ввода и адаптивные отступы */
         .input-group {
             position: relative;
             width: 100%;
-            margin-bottom: 14px;
+            margin-bottom: clamp(10px, 1.8vh, 16px);
         }
 
         .input-field {
             font-family: '42dot Sans', sans-serif;
             width: 100%;
-            font-size: 16px;
+            font-size: clamp(15px, 2vh, 17px);
             font-weight: 300;
-            padding: 8px 40px 8px 0;
+            padding: clamp(6px, 1.2vh, 10px) 40px clamp(6px, 1.2vh, 10px) 0;
             border: none;
             border-bottom: 1px solid #000000;
             background: transparent;
@@ -254,11 +261,11 @@
             font-weight: 300;
         }
 
-        /* Кастомный квадратный индикатор чекбокса */
+        /* Индикатор чекбокса */
         .status-icon {
             position: absolute;
             right: 4px;
-            bottom: 10px;
+            bottom: clamp(8px, 1.4vh, 12px);
             width: 18px;
             height: 18px;
             border: 1px solid #000000;
@@ -292,7 +299,7 @@
             display: block;
         }
 
-        /* Валидация требований к паролям (Шаг 2) */
+        /* Требования к паролям (Шаг 2) */
         .password-requirements {
             list-style: none;
             margin-top: 15px;
@@ -341,7 +348,7 @@
             display: block;
         }
 
-        /* Группа ввода цифр SMS (Шаг 3) */
+        /* Поля ввода SMS (Шаг 3) */
         .code-group {
             display: flex;
             justify-content: space-between;
@@ -374,7 +381,7 @@
             width: 100%;
             display: flex;
             flex-direction: column;
-            gap: 14px;
+            gap: 12px;
         }
 
         .btn {
@@ -382,7 +389,7 @@
             font-size: 16px;
             font-weight: 400;
             width: 100%;
-            padding: 16px;
+            padding: clamp(13px, 1.8vh, 17px);
             border: 1px solid #000000;
             cursor: pointer;
             transition: transform 0.1s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.3s ease, color 0.3s ease;
@@ -392,7 +399,6 @@
             border-radius: 0;
         }
 
-        /* Приятная микро-анимация нажатия */
         .btn:active {
             transform: scale(0.97);
         }
@@ -419,15 +425,16 @@
             background-color: #000000;
         }
 
-        /* Нижний блок футера */
+        /* Нижний блок футера — привязан к низу */
         .footer-section {
             width: 100%;
             max-width: 400px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 20px;
+            gap: clamp(12px, 2vh, 25px);
             z-index: 3;
+            flex-shrink: 0;
         }
 
         .version {
@@ -557,13 +564,13 @@
         const backBtn = document.getElementById('backBtn');
         let codeValues = ["", "", "", ""];
 
-        // Фильтр никнейма: строго регулярное выражение на латиницу А-Z, цифры и _
+        // Фильтрация ввода никнейма (только английские буквы, цифры и _)
         function cleanNicknameInput() {
             const nicknameField = document.getElementById('nickname');
             nicknameField.value = nicknameField.value.replace(/[^a-zA-Z0-9_]/g, '');
         }
 
-        // Автоподстановка точек и фильтрация даты (ДД.ММ.ГГГГ)
+        // Автоматическая расстановка точек при вводе ДД.ММ.ГГГГ
         function formatBirthdateInput() {
             const dateField = document.getElementById('birthdate');
             let val = dateField.value.replace(/\D/g, ''); 
@@ -589,7 +596,6 @@
             document.getElementById('group_lastname').classList.toggle('field-valid', lastname !== "");
             document.getElementById('group_nickname').classList.toggle('field-valid', nickname !== "");
             
-            // Галочка появляется строго при завершении ввода даты (10 символов)
             const isBirthdateComplete = (birthdate.length === 10);
             document.getElementById('group_birthdate').classList.toggle('field-valid', isBirthdateComplete);
 
@@ -625,7 +631,7 @@
             }
         }
 
-        // Фокусировка на ячейках кода
+        // Фокусировка на ячейках ввода кода
         function moveCodeFocus(input, index) {
             codeValues[index] = input.value;
             if (input.value.length === 1 && index < 3) {
@@ -651,9 +657,8 @@
             }
         }
 
-        // Безопасное переключение состояний экранов и вращение декораций
+        // Смена экранов и плавный поворот геометрических декораций
         function goToStep(target) {
-            // Удаляем активные классы со всех экранов
             document.getElementById('screenWelcome').classList.remove('active');
             document.getElementById('screenStep1').classList.remove('active');
             document.getElementById('screenStep2').classList.remove('active');
@@ -664,12 +669,14 @@
 
             currentAppState = target;
 
+            // Сброс позиции скролла при переключении экрана, на всякий случай
+            document.querySelector('.screen-container').scrollTop = 0;
+
             if (target === 'welcome') {
                 document.getElementById('screenWelcome').classList.add('active');
                 backBtn.classList.remove('visible');
                 continueBtn.style.display = 'none';
                 
-                // Квадраты всегда на месте, плавно поворачиваются
                 topDecor.style.transform = 'rotate(25deg)';
                 leftDecor.style.transform = 'translateY(-50%) rotate(35deg)';
             } else {
@@ -710,6 +717,7 @@
             }
         }
 
+        // Логика кнопки назад
         function handleBack() {
             if (currentAppState === 1) {
                 goToStep('welcome');

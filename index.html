@@ -42,7 +42,8 @@
             position: absolute;
             background-color: #000000;
             z-index: 1;
-            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+            /* transform задается динамически через JS, убираем жесткий transition для плавности мыши */
+            transition: transform 0.1s ease-out;
             pointer-events: none;
         }
 
@@ -51,7 +52,6 @@
             height: clamp(120px, 24vh, 220px);
             top: clamp(-80px, -10vh, -100px);
             right: clamp(-45px, -7vh, -65px);
-            transform: rotate(25deg);
             border: 4px solid #ffffff;
             outline: 2px solid #000000;
         }
@@ -61,7 +61,6 @@
             height: clamp(100px, 20vh, 170px);
             left: clamp(-60px, -8vh, -90px);
             top: 45%;
-            transform: translateY(-50%) rotate(35deg);
             border: 4px solid #ffffff;
             outline: 2px solid #000000;
         }
@@ -71,7 +70,6 @@
             height: clamp(110px, 22vh, 190px);
             bottom: clamp(-60px, -8vh, -80px);
             right: clamp(-25px, -5vh, -45px);
-            transform: rotate(15deg);
             background-color: transparent;
             border: clamp(6px, 1.5vh, 12px) solid #000000;
         }
@@ -660,9 +658,9 @@
 </head>
 <body>
 
-    <div class="decor decor-top-right"></div>
-    <div class="decor decor-left"></div>
-    <div class="decor decor-bottom-right"></div>
+    <div class="decor decor-top-right" id="decorTopRight"></div>
+    <div class="decor decor-left" id="decorLeft"></div>
+    <div class="decor decor-bottom-right" id="decorBottomRight"></div>
 
     <div class="header-section">
         <button class="btn-back" id="backBtn" onclick="handleBack()">назад</button>
@@ -807,14 +805,116 @@
         const SUPABASE_URL = 'https://rnqdaqbvriztmfxwcxri.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJucWRhcWJ2cml6dG1meHdjeHJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2MjcwMjEsImV4cCI6MjA5NTIwMzAyMX0.S3JwkpGYsjMLoT2bBZxrDq4B8mEPnZY9FLTelaqqh3s';
         
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let currentAppState = 'welcome'; 
-        let currentUser = null; // Храним данные вошедшего/зарегистрированного пользователя
+        let currentUser = null; 
+        let codeValues = ["", "", "", ""];
+
+        // Базовые углы поворота для анимаций экранов
+        let baseAngles = {
+            welcome: { top: 25, left: 35 },
+            step1: { top: 45, left: 15 },
+            step2: { top: 10, left: 55 },
+            step3: { top: 60, left: 5 },
+            feed: { top: 15, left: -15 },
+            publish: { top: -20, left: 40 }
+        };
+
+        // Элементы интерфейса
         const continueBtn = document.getElementById('continueBtn');
         const backBtn = document.getElementById('backBtn');
         const appTabBar = document.getElementById('appTabBar');
-        let codeValues = ["", "", "", ""];
+
+        // ================= СИСТЕМА ПЕРЕКЛЮЧЕНИЯ ЭКРАНОВ =================
+        function goToStep(target) {
+            document.getElementById('screenWelcome').classList.remove('active');
+            document.getElementById('screenStep1').classList.remove('active');
+            document.getElementById('screenStep2').classList.remove('active');
+            document.getElementById('screenStep3').classList.remove('active');
+            document.getElementById('screenFeed').classList.remove('active');
+            document.getElementById('screenPublish').classList.remove('active');
+
+            currentAppState = target;
+            document.querySelector('.screen-container').scrollTop = 0;
+
+            // Контроль видимости таб-бара и кнопки "Назад"
+            if (target === 'feed' || target === 'publish') {
+                appTabBar.style.display = 'flex';
+                backBtn.classList.remove('visible');
+                continueBtn.style.display = 'none';
+            } else {
+                appTabBar.style.display = 'none';
+            }
+
+            // Управление состояниями экранов
+            if (target === 'welcome') {
+                document.getElementById('screenWelcome').classList.add('active');
+                backBtn.classList.remove('visible');
+                continueBtn.style.display = 'none';
+            } else if (target === 1) {
+                document.getElementById('screenStep1').classList.add('active');
+                backBtn.classList.add('visible');
+                continueBtn.style.display = 'block';
+                validateStep1();
+            } else if (target === 2) {
+                document.getElementById('screenStep2').classList.add('active');
+                backBtn.classList.add('visible');
+                continueBtn.style.display = 'block';
+                validateStep2();
+            } else if (target === 3) {
+                document.getElementById('screenStep3').classList.add('active');
+                backBtn.classList.add('visible');
+                continueBtn.style.display = 'block';
+                validateStep3();
+            } else if (target === 'feed') {
+                document.getElementById('screenFeed').classList.add('active');
+                loadFeedPosts();
+            } else if (target === 'publish') {
+                document.getElementById('screenPublish').classList.add('active');
+            }
+
+            // Принудительно вызываем обновление положения квадратов под новый экран
+            updateDecorPositions(0, 0);
+        }
+
+        // ================= ИНТЕРАКТИВНЫЙ ПАРАЛЛАКС ФОНА И КВАДРАТОВ =================
+        function updateDecorPositions(mouseX, mouseY) {
+            const topDecor = document.getElementById('decorTopRight');
+            const leftDecor = document.getElementById('decorLeft');
+            const bottomDecor = document.getElementById('decorBottomRight');
+
+            // Получаем базовые углы для текущего состояния экрана
+            let stateKey = (typeof currentAppState === 'number') ? 'step' + currentAppState : currentAppState;
+            let currentAngles = baseAngles[stateKey] || { top: 0, left: 0 };
+
+            // Расчет смещения на основе координат мыши (интенсивность параллакса)
+            let moveTopX = mouseX * 25;
+            let moveTopY = mouseY * 25;
+            let moveLeftX = mouseX * -35;
+            let moveLeftY = mouseY * -35;
+            let moveBottomX = mouseX * 15;
+            let moveBottomY = mouseY * 15;
+
+            // Применяем трансформации
+            if (topDecor) {
+                topDecor.style.transform = `translate(${moveTopX}px, ${moveTopY}px) rotate(${currentAngles.top}deg)`;
+            }
+            if (leftDecor) {
+                leftDecor.style.transform = `translate(${moveLeftX}px, ${moveLeftY}px) translateY(-50%) rotate(${currentAngles.left}deg)`;
+            }
+            if (bottomDecor) {
+                bottomDecor.style.transform = `translate(${moveBottomX}px, ${moveBottomY}px) rotate(15deg)`;
+            }
+        }
+
+        // Слушатель движения мыши по всему экрану
+        document.addEventListener('mousemove', (e) => {
+            // Высчитываем нормализованные координаты от -1 до 1
+            let x = (e.clientX / window.innerWidth) - 0.5;
+            let y = (e.clientY / window.innerHeight) - 0.5;
+            updateDecorPositions(x, y);
+        });
 
         // Фильтрация ввода никнейма (только a-z, A-Z, 0-9 и _)
         function cleanNicknameInput() {
@@ -970,7 +1070,7 @@
                 if (profileError) {
                     alert('Ошибка записи профиля: ' + profileError.message);
                 } else {
-                    alert('Аккаунт успешно создан! Введите 4-значный код (демо) для перехода к ленте.');
+                    alert('Аккаунт успешно создан! Завершаем регистрацию.');
                     goToStep(3);
                 }
             }
@@ -979,8 +1079,6 @@
 
         // Подтверждение OTP / Email-кода на Шаге 3
         async function verifyEmailCode() {
-            // В полноценном проекте здесь вызывается supabase.auth.verifyOtp
-            // В рамках демо-версии мы пропускаем пользователя дальше в ленту после ввода любых 4 цифр
             alert('Регистрация успешно подтверждена!');
             goToStep('feed');
         }
@@ -1072,7 +1170,6 @@
 
             // Отрисовываем каждый пост по очереди
             for (const post of posts) {
-                // Получаем ник автора (из вымышленного профиля или системное имя)
                 let authorName = 'User_' + post.user_id.substring(0, 5);
                 
                 // Считаем общее количество лайков
@@ -1190,66 +1287,6 @@
             }
         }
 
-        // ================= СИСТЕМА ПЕРЕКЛЮЧЕНИЯ ЭКРАНОВ =================
-        function goToStep(target) {
-            document.getElementById('screenWelcome').classList.remove('active');
-            document.getElementById('screenStep1').classList.remove('active');
-            document.getElementById('screenStep2').classList.remove('active');
-            document.getElementById('screenStep3').classList.remove('active');
-            document.getElementById('screenFeed').classList.remove('active');
-            document.getElementById('screenPublish').classList.remove('active');
-
-            const topDecor = document.querySelector('.decor-top-right');
-            const leftDecor = document.querySelector('.decor-left');
-
-            currentAppState = target;
-            document.querySelector('.screen-container').scrollTop = 0;
-
-            // Контроль таб-бара и кнопки Назад
-            if (target === 'feed' || target === 'publish') {
-                appTabBar.style.display = 'flex';
-                backBtn.classList.remove('visible');
-                continueBtn.style.display = 'none';
-            } else {
-                appTabBar.style.display = 'none';
-            }
-
-            if (target === 'welcome') {
-                document.getElementById('screenWelcome').classList.add('active');
-                backBtn.classList.remove('visible');
-                continueBtn.style.display = 'none';
-                
-                topDecor.style.transform = 'rotate(25deg)';
-                leftDecor.style.transform = 'translateY(-50%) rotate(35deg)';
-            } else if (target === 1) {
-                document.getElementById('screenStep1').classList.add('active');
-                backBtn.classList.add('visible');
-                continueBtn.style.display = 'block';
-                validateStep1();
-                topDecor.style.transform = 'rotate(45deg) scale(0.95)';
-                leftDecor.style.transform = 'translateY(-50%) rotate(15deg) scale(0.95)';
-            } else if (target === 2) {
-                document.getElementById('screenStep2').classList.add('active');
-                backBtn.classList.add('visible');
-                continueBtn.style.display = 'block';
-                validateStep2();
-                topDecor.style.transform = 'rotate(10deg)';
-                leftDecor.style.transform = 'translateY(-50%) rotate(55deg)';
-            } else if (target === 3) {
-                document.getElementById('screenStep3').classList.add('active');
-                backBtn.classList.add('visible');
-                continueBtn.style.display = 'block';
-                validateStep3();
-                topDecor.style.transform = 'rotate(60deg)';
-                leftDecor.style.transform = 'translateY(-50%) rotate(5deg)';
-            } else if (target === 'feed') {
-                document.getElementById('screenFeed').classList.add('active');
-                loadFeedPosts();
-            } else if (target === 'publish') {
-                document.getElementById('screenPublish').classList.add('active');
-            }
-        }
-
         // Обработка клика по кнопке продолжить
         function handleContinue() {
             if (!continueBtn.classList.contains('ready')) return;
@@ -1275,6 +1312,11 @@
                 goToStep(2);
             }
         }
+
+        // Инициализируем изначальные позиции квадратов при загрузке страницы
+        window.onload = function() {
+            updateDecorPositions(0, 0);
+        };
     </script>
 </body>
 </html>

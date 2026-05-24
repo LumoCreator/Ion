@@ -2,31 +2,80 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ion — Регистрация</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ion — Социальная сеть</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=42dot+Sans:wght@300;400&display=swap" rel="stylesheet">
 
     <style>
-        /* Общие настройки */
+        /* Общие настройки и сброс стилей */
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            -webkit-tap-highlight-color: transparent; /* Убирает синюю рамку при нажатии на смартфонах */
         }
 
         body {
             font-family: '42dot Sans', sans-serif;
             background-color: #ffffff;
             height: 100vh;
+            height: -webkit-fill-available; /* Корректная высота для Safari на iOS */
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             align-items: center;
-            padding: 40px 24px;
-            overflow-x: hidden;
+            padding: clamp(20px, 5vh, 40px) 24px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        html {
+            height: -webkit-fill-available;
+        }
+
+        /* Декоративные геометрические элементы фона */
+        .decor {
+            position: absolute;
+            background-color: #000000;
+            z-index: 1;
+            transition: all 0.5s ease;
+            pointer-events: none; /* Чтобы не мешали нажимать на кнопки */
+        }
+
+        /* Верхний правый блок */
+        .decor-top-right {
+            width: clamp(150px, 30vh, 250px);
+            height: clamp(150px, 30vh, 250px);
+            top: clamp(-100px, -15vh, -120px);
+            right: clamp(-60px, -10vh, -80px);
+            transform: rotate(25deg);
+            border: 4px solid #ffffff;
+            outline: 2px solid #000000;
+        }
+
+        /* Левый средний блок */
+        .decor-left {
+            width: clamp(120px, 25vh, 200px);
+            height: clamp(120px, 25vh, 200px);
+            left: clamp(-80px, -12vh, -110px);
+            top: 40%;
+            transform: translateY(-50%) rotate(35deg);
+            border: 4px solid #ffffff;
+            outline: 2px solid #000000;
+        }
+
+        /* Нижний правый блок */
+        .decor-bottom-right {
+            width: clamp(140px, 28vh, 220px);
+            height: clamp(140px, 28vh, 220px);
+            bottom: clamp(-80px, -12vh, -100px);
+            right: clamp(-40px, -8vh, -60px);
+            transform: rotate(15deg);
+            background-color: transparent;
+            border: clamp(10px, 2vh, 15px) solid #000000;
         }
 
         /* Кнопка "Назад" */
@@ -35,6 +84,8 @@
             max-width: 400px;
             display: flex;
             justify-content: flex-start;
+            z-index: 3;
+            min-height: 48px;
         }
 
         .btn-back {
@@ -46,51 +97,84 @@
             border: none;
             padding: 12px 28px;
             cursor: pointer;
-            transition: opacity 0.2s ease;
+            transition: transform 0.1s ease, opacity 0.2s ease;
+            visibility: hidden; /* По умолчанию скрыта на главном экране */
         }
 
-        .btn-back:hover {
-            opacity: 0.8;
+        .btn-back:active {
+            transform: scale(0.96);
         }
 
-        /* Контейнер шагов */
-        .step-container {
+        /* Контейнер для экранов */
+        .screen-container {
             width: 100%;
             max-width: 400px;
             flex: 1;
             display: flex;
             flex-direction: column;
-            justify-content: center; /* Центрируем логотип и контент */
+            justify-content: center;
+            z-index: 2;
         }
 
-        /* Шаги скрыты по умолчанию, кроме активного */
-        .register-step {
+        /* Общий класс для экранов с анимацией появления */
+        .app-screen {
             display: none;
             flex-direction: column;
+            animation: fadeIn 0.4s ease forwards;
         }
 
-        .register-step.active {
+        .app-screen.active {
             display: flex;
         }
 
-        /* Шапка контента (Шаг Х) */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ================= ЭКРАН ПРИВЕТСТВИЯ ================= */
+        .welcome-brand {
+            text-align: center;
+            margin-bottom: clamp(40px, 8vh, 80px);
+        }
+
+        .welcome-logo {
+            width: clamp(100px, 18vh, 140px);
+            height: auto;
+            display: block;
+            margin: 0 auto 15px auto;
+        }
+
+        .welcome-subtitle {
+            font-size: clamp(16px, 2.5vh, 18px);
+            font-weight: 300;
+            color: #2c2c2c;
+            letter-spacing: 0.5px;
+        }
+
+        /* ================= ЭКРАНЫ РЕГИСТРАЦИИ ================= */
         .step-title {
-            font-size: 20px;
+            font-size: clamp(18px, 2.8vh, 20px);
             font-weight: 300;
             color: #000000;
             margin-bottom: 12px;
         }
 
-        /* Логотип по центру */
         .brand-row {
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 35px;
+            margin-bottom: clamp(25px, 5vh, 45px);
         }
 
-        .logo {
-            height: 48px;
+        .logo-mini {
+            height: clamp(38px, 5vh, 48px);
             width: auto;
         }
 
@@ -101,18 +185,17 @@
         }
 
         .brand-sub {
-            font-size: 20px;
+            font-size: clamp(18px, 2.5vh, 20px);
             font-weight: 300;
             color: #000000;
         }
 
-        /* Информационные блоки */
         .info-block {
-            margin-bottom: 25px;
+            margin-bottom: clamp(20px, 4vh, 30px);
         }
 
         .info-title {
-            font-size: 20px;
+            font-size: clamp(18px, 2.8vh, 20px);
             font-weight: 300;
             color: #000000;
             margin-bottom: 4px;
@@ -124,17 +207,17 @@
             color: #a0a0a0;
         }
 
-        /* Стили полей ввода */
+        /* Поля ввода и группы */
         .input-group {
             position: relative;
             width: 100%;
-            margin-bottom: 22px;
+            margin-bottom: clamp(14px, 2.5vh, 22px);
         }
 
         .input-field {
             font-family: '42dot Sans', sans-serif;
             width: 100%;
-            font-size: 18px;
+            font-size: clamp(16px, 2.3vh, 18px);
             font-weight: 300;
             padding: 10px 40px 10px 0;
             border: none;
@@ -142,6 +225,12 @@
             background: transparent;
             outline: none;
             color: #000000;
+            border-radius: 0;
+            transition: border-color 0.2s ease;
+        }
+
+        .input-field:focus {
+            border-bottom-width: 2px;
         }
 
         .input-field::placeholder {
@@ -149,7 +238,7 @@
             font-weight: 300;
         }
 
-        /* Иконка статуса заполнения */
+        /* Иконка чекбокса подтверждения заполнения полей */
         .status-icon {
             position: absolute;
             right: 4px;
@@ -162,10 +251,10 @@
             align-items: center;
             justify-content: center;
             opacity: 0;
-            transition: all 0.2s ease;
+            transform: scale(0.8);
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        /* Стрелочка/галочка внутри кастомной иконки */
         .status-icon::after {
             content: '';
             width: 4px;
@@ -177,16 +266,18 @@
             display: none;
         }
 
-        .input-field:not(:placeholder-shown) + .status-icon {
+        /* Показываем иконку при валидности класса */
+        .input-group.field-valid .status-icon {
             opacity: 1;
+            transform: scale(1);
             background-color: #000000;
         }
 
-        .input-field:not(:placeholder-shown) + .status-icon::after {
+        .input-group.field-valid .status-icon::after {
             display: block;
         }
 
-        /* Список требований к паролю (Шаг 2) */
+        /* Требования к паролю (Шаг 2) */
         .password-requirements {
             list-style: none;
             margin-top: 15px;
@@ -202,9 +293,9 @@
             font-size: 16px;
             font-weight: 300;
             color: #000000;
+            transition: opacity 0.2s ease;
         }
 
-        /* Четкие квадратные чекбоксы для паролей */
         .req-box {
             width: 18px;
             height: 18px;
@@ -214,7 +305,7 @@
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            transition: all 0.2s ease;
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         .req-box::after {
@@ -236,112 +327,163 @@
             display: block;
         }
 
-        /* Блок ввода кода из 4-х цифр (Шаг 3) */
+        /* Поле ввода кода (Шаг 3) */
         .code-group {
             display: flex;
-            gap: 16px;
-            margin-top: 15px;
-            margin-bottom: 10px;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 20px;
         }
 
         .code-input {
             font-family: '42dot Sans', sans-serif;
-            width: 52px;
-            height: 52px;
+            flex: 1;
+            max-width: 70px;
+            aspect-ratio: 1 / 1;
             border: 1px solid #000000;
             text-align: center;
-            font-size: 24px;
+            font-size: clamp(20px, 3.5vh, 26px);
             font-weight: 400;
             outline: none;
             background: transparent;
+            border-radius: 0;
+            transition: all 0.2s ease;
         }
 
-        /* Нижний блок с кнопкой "Продолжить" */
+        .code-input:focus {
+            border-width: 2px;
+            background-color: #fafafa;
+        }
+
+        /* ================= КНОПКИ И ФУТЕР ================= */
+        .button-group {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .btn {
+            font-family: '42dot Sans', sans-serif;
+            font-size: 16px;
+            font-weight: 400;
+            width: 100%;
+            padding: clamp(14px, 2.2vh, 18px);
+            border: 1px solid #000000;
+            cursor: pointer;
+            transition: transform 0.1s ease, background-color 0.3s ease, color 0.3s ease;
+            text-align: center;
+            text-decoration: none;
+            outline: none;
+            border-radius: 0;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Стили кнопок приветствия */
+        .btn-login {
+            background: linear-gradient(180deg, #1c1c1c 0%, #0d0d0d 100%);
+            color: #ffffff;
+            border: none;
+        }
+
+        .btn-register {
+            background-color: #ffffff;
+            color: #000000;
+        }
+
+        /* Стили кнопки продолжения регистрации */
+        .btn-continue {
+            background-color: #666666;
+            color: #ffffff;
+            border: none;
+        }
+
+        .btn-continue.ready {
+            background-color: #000000;
+            cursor: pointer;
+        }
+
+        /* Футер */
         .footer-section {
             width: 100%;
             max-width: 400px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 40px;
+            gap: clamp(20px, 4vh, 40px);
+            z-index: 3;
         }
 
-        .btn-continue {
-            font-family: '42dot Sans', sans-serif;
-            width: 100%;
-            padding: 18px;
-            font-size: 18px;
-            font-weight: 400;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.3s ease, color 0.3s ease;
-            text-align: center;
-            /* По умолчанию серая (неактивное состояние) */
-            background-color: #666666;
-            color: #ffffff;
-        }
-
-        /* Активное состояние кнопки */
-        .btn-continue.ready {
-            background-color: #000000;
-        }
-
-        /* Версия */
         .version {
             font-size: 13px;
             font-weight: 300;
             font-style: italic;
             color: #7f7f7f;
+            user-select: none;
         }
     </style>
 </head>
 <body>
 
     <div class="header-section">
-        <button class="btn-back" id="backBtn" onclick="prevStep()">назад</button>
+        <button class="btn-back" id="backBtn" onclick="handleBack()">назад</button>
     </div>
 
-    <div class="step-container">
+    <div class="screen-container">
 
-        <div class="register-step active" id="step1">
+        <div class="app-screen active" id="screenWelcome">
+            <div class="welcome-brand">
+                <img src="https://raw.githubusercontent.com/LumoCreator/Ion/refs/heads/main/LOGO.svg" alt="Ion Логотип" class="welcome-logo">
+                <p class="welcome-subtitle">социальная сеть</p>
+            </div>
+            <div class="button-group">
+                <button class="btn btn-login" onclick="alert('Переход к авторизации')">Войти в аккаунт</button>
+                <button class="btn btn-register" onclick="goToStep(1)">Создать аккаунт</button>
+            </div>
+        </div>
+
+        <div class="app-screen" id="screenStep1">
             <h2 class="step-title">Создание аккаунта - шаг 1</h2>
             <div class="brand-row">
-                <img src="https://raw.githubusercontent.com/LumoCreator/Ion/refs/heads/main/LOGO.svg" alt="Ion" class="logo">
+                <img src="https://raw.githubusercontent.com/LumoCreator/Ion/refs/heads/main/LOGO.svg" alt="Ion" class="logo-mini">
                 <span class="brand-divider">—</span>
                 <span class="brand-sub">социальная сеть</span>
             </div>
 
             <div class="info-block">
                 <h3 class="info-title">Ваши данные</h3>
-                <p class="info-desc" id="step1Desc">это безопасно.</p>
+                <p class="info-desc">это безопасно.</p>
             </div>
 
-            <div class="input-group">
+            <div class="input-group" id="group_email">
                 <input type="email" class="input-field" id="email" placeholder="email" oninput="validateStep1()">
                 <div class="status-icon"></div>
             </div>
-            <div class="input-group">
+            <div class="input-group" id="group_firstname">
                 <input type="text" class="input-field" id="firstname" placeholder="имя" oninput="validateStep1()">
                 <div class="status-icon"></div>
             </div>
-            <div class="input-group">
+            <div class="input-group" id="group_lastname">
                 <input type="text" class="input-field" id="lastname" placeholder="фамилия (по желанию)" oninput="validateStep1()">
                 <div class="status-icon"></div>
             </div>
-            <div class="input-group">
-                <input type="text" class="input-field" id="nickname" placeholder="никнейм" oninput="validateStep1()">
+            <div class="input-group" id="group_nickname">
+                <input type="text" class="input-field" id="nickname" placeholder="никнейм" oninput="cleanNicknameInput(); validateStep1();">
                 <div class="status-icon"></div>
             </div>
-            <div class="input-group">
-                <input type="text" class="input-field" id="birthdate" placeholder="день рождения" oninput="validateStep1()">
+            <div class="input-group" id="group_birthdate">
+                <input type="text" maxlength="10" class="input-field" id="birthdate" placeholder="день рождения" oninput="formatBirthdateInput(); validateStep1();">
                 <div class="status-icon"></div>
             </div>
         </div>
 
-        <div class="register-step" id="step2">
+        <div class="app-screen" id="screenStep2">
             <h2 class="step-title">Создание аккаунта - шаг 2</h2>
             <div class="brand-row">
-                <img src="https://raw.githubusercontent.com/LumoCreator/Ion/refs/heads/main/LOGO.svg" alt="Ion" class="logo">
+                <img src="https://raw.githubusercontent.com/LumoCreator/Ion/refs/heads/main/LOGO.svg" alt="Ion" class="logo-mini">
                 <span class="brand-divider">—</span>
                 <span class="brand-sub">социальная сеть</span>
             </div>
@@ -359,22 +501,16 @@
             </div>
 
             <ul class="password-requirements">
-                <li class="req-item" id="reqMatch">
-                    <div class="req-box"></div> — пароли совпадают
-                </li>
-                <li class="req-item" id="reqLength">
-                    <div class="req-box"></div> — больше 6-и символов
-                </li>
-                <li class="req-item" id="reqSpecial">
-                    <div class="req-box"></div> — есть хотя бы один специальный символ
-                </li>
+                <li class="req-item" id="reqMatch"><div class="req-box"></div> — пароли совпадают</li>
+                <li class="req-item" id="reqLength"><div class="req-box"></div> — больше 6-и символов</li>
+                <li class="req-item" id="reqSpecial"><div class="req-box"></div> — есть хотя бы один специальный символ</li>
             </ul>
         </div>
 
-        <div class="register-step" id="step3">
+        <div class="app-screen" id="screenStep3">
             <h2 class="step-title">Создание аккаунта - шаг 3</h2>
             <div class="brand-row">
-                <img src="https://raw.githubusercontent.com/LumoCreator/Ion/refs/heads/main/LOGO.svg" alt="Ion" class="logo">
+                <img src="https://raw.githubusercontent.com/LumoCreator/Ion/refs/heads/main/LOGO.svg" alt="Ion" class="logo-mini">
                 <span class="brand-divider">—</span>
                 <span class="brand-sub">социальная сеть</span>
             </div>
@@ -385,50 +521,67 @@
             </div>
 
             <div class="code-group">
-                <input type="text" maxlength="1" class="code-input" oninput="moveCodeFocus(this, 0)" onkeydown="backspaceCode(this, 0)">
-                <input type="text" maxlength="1" class="code-input" oninput="moveCodeFocus(this, 1)" onkeydown="backspaceCode(this, 1)">
-                <input type="text" maxlength="1" class="code-input" oninput="moveCodeFocus(this, 2)" onkeydown="backspaceCode(this, 2)">
-                <input type="text" maxlength="1" class="code-input" oninput="moveCodeFocus(this, 3)" onkeydown="backspaceCode(this, 3)">
+                <input type="tel" maxlength="1" class="code-input" oninput="moveCodeFocus(this, 0)" onkeydown="backspaceCode(this, 0)">
+                <input type="tel" maxlength="1" class="code-input" oninput="moveCodeFocus(this, 1)" onkeydown="backspaceCode(this, 1)">
+                <input type="tel" maxlength="1" class="code-input" oninput="moveCodeFocus(this, 2)" onkeydown="backspaceCode(this, 2)">
+                <input type="tel" maxlength="1" class="code-input" oninput="moveCodeFocus(this, 3)" onkeydown="backspaceCode(this, 3)">
             </div>
         </div>
 
     </div>
 
     <div class="footer-section">
-        <button class="btn-continue" id="continueBtn" onclick="nextStep()">Продолжить</button>
+        <button class="btn btn-continue" id="continueBtn" style="display: none;" onclick="handleContinue()">Продолжить</button>
         <div class="version">demo version - 1.0</div>
     </div>
 
     <script>
-        let currentStep = 1;
-        const totalSteps = 3;
-
-        // Элементы управления
+        // Состояние приложения: 'welcome', 1, 2, 3
+        let currentAppState = 'welcome'; 
+        
         const continueBtn = document.getElementById('continueBtn');
         const backBtn = document.getElementById('backBtn');
-
-        // Массив значений для кода подтверждения
         let codeValues = ["", "", "", ""];
 
-        // Управление видимостью кнопки Назад
-        function updateBackButton() {
-            if (currentStep === 1) {
-                backBtn.style.visibility = 'hidden';
-            } else {
-                backBtn.style.visibility = 'visible';
-            }
+        // Очистка никнейма от любых символов кроме английских, цифр и _
+        function cleanNicknameInput() {
+            const nicknameField = document.getElementById('nickname');
+            nicknameField.value = nicknameField.value.replace(/[^a-zA-Z0-9_]/g, '');
         }
-        updateBackButton();
 
-        // Проверка Шага 1
+        // Автоматическое форматирование даты ДД.ММ.ГГГГ и запрет букв
+        function formatBirthdateInput() {
+            const dateField = document.getElementById('birthdate');
+            let val = dateField.value.replace(/\D/g, ''); // Удаляем всё кроме цифр
+            
+            if (val.length > 2 && val.length <= 4) {
+                val = val.slice(0, 2) + '.' + val.slice(2);
+            } else if (val.length > 4) {
+                val = val.slice(0, 2) + '.' + val.slice(2, 4) + '.' + val.slice(4, 8);
+            }
+            dateField.value = val;
+        }
+
+        // Валидация Первого Шага
         function validateStep1() {
             const email = document.getElementById('email').value.trim();
             const firstname = document.getElementById('firstname').value.trim();
+            const lastname = document.getElementById('lastname').value.trim();
             const nickname = document.getElementById('nickname').value.trim();
             const birthdate = document.getElementById('birthdate').value.trim();
 
-            // Фамилия необязательна, проверяем остальные
-            if (email !== "" && firstname !== "" && nickname !== "" && birthdate !== "") {
+            // Показываем галочки заполненности индивидуально
+            document.getElementById('group_email').classList.toggle('field-valid', email !== "");
+            document.getElementById('group_firstname').classList.toggle('field-valid', firstname !== "");
+            document.getElementById('group_lastname').classList.toggle('field-valid', lastname !== "");
+            document.getElementById('group_nickname').classList.toggle('field-valid', nickname !== "");
+            
+            // Галочка даты появляется СТРОГО при полной длине строки "ДД.ММ.ГГГГ" (10 символов)
+            const isBirthdateComplete = (birthdate.length === 10);
+            document.getElementById('group_birthdate').classList.toggle('field-valid', isBirthdateComplete);
+
+            // Кнопка активна, если обязательные поля не пустые, и дата введена полностью
+            if (email !== "" && firstname !== "" && nickname !== "" && isBirthdateComplete) {
                 continueBtn.classList.add('ready');
                 return true;
             } else {
@@ -437,20 +590,17 @@
             }
         }
 
-        // Проверка Шага 2 (Пароли и Галочки)
+        // Валидация Второго Шага
         function validateStep2() {
             const pass = document.getElementById('password').value;
             const confirm = document.getElementById('password_confirm').value;
 
-            // 1. Проверка совпадения
             const match = (pass === confirm && pass !== "");
             document.getElementById('reqMatch').classList.toggle('valid', match);
 
-            // 2. Проверка длины (больше 6 символов, то есть от 7)
             const lengthValid = pass.length > 6;
             document.getElementById('reqLength').classList.toggle('valid', lengthValid);
 
-            // 3. Проверка спецсимвола
             const specialValid = /[!@#$%^&*(),.?":{}|<>_+\-\[\]\\\/]/.test(pass);
             document.getElementById('reqSpecial').classList.toggle('valid', specialValid);
 
@@ -463,11 +613,9 @@
             }
         }
 
-        // Автофокус по ячейкам кода (Шаг 3)
+        // Фокусировка на ячейках кода (Шаг 3)
         function moveCodeFocus(input, index) {
             codeValues[index] = input.value;
-            
-            // Если ввели символ, прыгаем вперед
             if (input.value.length === 1 && index < 3) {
                 input.nextElementSibling.focus();
             }
@@ -475,7 +623,6 @@
         }
 
         function backspaceCode(input, index) {
-            // Если нажали Backspace в пустой ячейке, прыгаем назад
             if (event.key === 'Backspace' && input.value.length === 0 && index > 0) {
                 input.previousElementSibling.focus();
             }
@@ -492,40 +639,75 @@
             }
         }
 
-        // Логика перехода к следующему шагу
-        function nextStep() {
+        // Навигация и переключение экранов приложения
+        function goToStep(target) {
+            // Скрываем все экраны
+            document.getElementById('screenWelcome').classList.remove('active');
+            document.getElementById('screenStep1').classList.remove('active');
+            document.getElementById('screenStep2').classList.remove('active');
+            document.getElementById('screenStep3').classList.remove('active');
+
+            // Смена декоративных углов для динамики при переключении экранов
+            const topDecor = document.querySelector('.decor-top-right');
+            const leftDecor = document.querySelector('.decor-left');
+
+            currentAppState = target;
+
+            if (target === 'welcome') {
+                document.getElementById('screenWelcome').classList.add('active');
+                backBtn.style.visibility = 'hidden';
+                continueBtn.style.display = 'none';
+                
+                topDecor.style.transform = 'rotate(25deg)';
+                leftDecor.style.transform = 'translateY(-50%) rotate(35deg)';
+            } else {
+                backBtn.style.visibility = 'visible';
+                continueBtn.style.display = 'block';
+                continueBtn.classList.remove('ready');
+
+                if (target === 1) {
+                    document.getElementById('screenStep1').classList.add('active');
+                    validateStep1();
+                    topDecor.style.transform = 'rotate(45deg) scale(0.9)';
+                    leftDecor.style.transform = 'translateY(-50%) rotate(15deg) scale(0.9)';
+                } else if (target === 2) {
+                    document.getElementById('screenStep2').classList.add('active');
+                    validateStep2();
+                    topDecor.style.transform = 'rotate(10deg)';
+                    leftDecor.style.transform = 'translateY(-50%) rotate(55deg)';
+                } else if (target === 3) {
+                    document.getElementById('screenStep3').classList.add('active');
+                    validateStep3();
+                    topDecor.style.transform = 'rotate(60deg)';
+                    leftDecor.style.transform = 'translateY(-50%) rotate(5deg)';
+                }
+            }
+        }
+
+        // Нажатие на кнопку "Продолжить"
+        function handleContinue() {
             if (!continueBtn.classList.contains('ready')) return;
 
-            if (currentStep === 1) {
-                // Передаем email во фразу на 3 шаге
+            if (currentAppState === 1) {
                 const emailVal = document.getElementById('email').value.trim();
                 document.getElementById('codeSentDesc').innerText = `код отправлен на email: ${emailVal}`;
-                
                 goToStep(2);
-                validateStep2();
-            } else if (currentStep === 2) {
+            } else if (currentAppState === 2) {
                 goToStep(3);
-                validateStep3();
-            } else if (currentStep === 3) {
+            } else if (currentAppState === 3) {
                 alert('Регистрация успешно завершена!');
             }
         }
 
-        // Логика перехода назад
-        function prevStep() {
-            if (currentStep > 1) {
-                goToStep(currentStep - 1);
-                if (currentStep === 1) validateStep1();
-                if (currentStep === 2) validateStep2();
+        // Нажатие на кнопку "Назад"
+        function handleBack() {
+            if (currentAppState === 1) {
+                goToStep('welcome');
+            } else if (currentAppState === 2) {
+                goToStep(1);
+            } else if (currentAppState === 3) {
+                goToStep(2);
             }
-        }
-
-        // Переключатель классов видимости
-        function goToStep(step) {
-            document.getElementById(`step${currentStep}`).classList.remove('active');
-            currentStep = step;
-            document.getElementById(`step${currentStep}`).classList.add('active');
-            updateBackButton();
         }
     </script>
 </body>

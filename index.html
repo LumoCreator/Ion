@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ion — Социальная сеть</title>
+    <title>Ion — Регистрация</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=42dot+Sans:wght@300;400&display=swap" rel="stylesheet">
 
     <style>
-        /* Общие настройки страницы */
+        /* Общие настройки */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -25,167 +25,508 @@
             flex-direction: column;
             justify-content: space-between;
             align-items: center;
-            overflow: hidden;
-            position: relative;
-            padding: 40px 20px;
+            padding: 40px 24px;
+            overflow-x: hidden;
         }
 
-        /* Декоративные геометрические элементы по углам макета */
-        .decor {
-            position: absolute;
+        /* Кнопка "Назад" */
+        .header-section {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        .btn-back {
+            font-family: '42dot Sans', sans-serif;
+            font-size: 16px;
+            font-weight: 400;
+            color: #ffffff;
             background-color: #000000;
-            z-index: 1;
+            border: none;
+            padding: 12px 28px;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
         }
 
-        /* Верхний правый блок */
-        .decor-top-right {
-            width: 250px;
-            height: 250px;
-            top: -120px;
-            right: -80px;
-            transform: rotate(25deg);
-            border: 4px solid #ffffff;
-            outline: 2px solid #000000;
+        .btn-back:hover {
+            opacity: 0.8;
         }
 
-        /* Левый средний блок */
-        .decor-left {
-            width: 200px;
-            height: 200px;
-            left: -110px;
-            top: 40%;
-            transform: translateY(-50%) rotate(35deg);
-            border: 4px solid #ffffff;
-            outline: 2px solid #000000;
-        }
-
-        /* Нижний правый блок (прозрачный внутри, только жирный контур) */
-        .decor-bottom-right {
-            width: 220px;
-            height: 220px;
-            bottom: -100px;
-            right: -60px;
-            transform: rotate(15deg);
-            background-color: transparent;
-            border: 15px solid #000000;
-        }
-
-        /* Контент-контейнер */
-        .main-container {
+        /* Контейнер шагов */
+        .step-container {
+            width: 100%;
+            max-width: 400px;
             flex: 1;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            max-width: 400px;
-            z-index: 2;
+            justify-content: center; /* Центрируем логотип и контент */
         }
 
-        /* Блок логотипа и подписи */
-        .brand-section {
-            text-align: center;
-            margin-bottom: 80px;
+        /* Шаги скрыты по умолчанию, кроме активного */
+        .register-step {
+            display: none;
+            flex-direction: column;
+        }
+
+        .register-step.active {
+            display: flex;
+        }
+
+        /* Шапка контента (Шаг Х) */
+        .step-title {
+            font-size: 20px;
+            font-weight: 300;
+            color: #000000;
+            margin-bottom: 12px;
+        }
+
+        /* Логотип по центру */
+        .brand-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 35px;
         }
 
         .logo {
-            width: 140px;
-            height: auto;
-            display: block;
-            margin: 0 auto 15px auto;
+            height: 48px;
+            width: auto;
         }
 
-        .subtitle {
-            font-size: 18px;
-            font-weight: 300; /* Light */
-            color: #2c2c2c;
-            letter-spacing: 0.5px;
+        .brand-divider {
+            font-size: 24px;
+            font-weight: 300;
+            color: #a0a0a0;
         }
 
-        /* Блок с кнопками */
-        .button-group {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .btn {
-            font-family: '42dot Sans', sans-serif;
-            font-size: 16px;
-            font-weight: 400; /* Regular */
-            width: 100%;
-            padding: 18px;
-            border: 1px solid #000000;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-align: center;
-            text-decoration: none;
-        }
-
-        /* Кнопка "Войти в аккаунт" (Тёмный градиент как на макете) */
-        .btn-login {
-            background: linear-gradient(180deg, #1c1c1c 0%, #0d0d0d 100%);
-            color: #ffffff;
-            border: none;
-        }
-
-        .btn-login:hover {
-            background: linear-gradient(180deg, #2d2d2d 0%, #1a1a1a 100%);
-        }
-
-        /* Кнопка "Создать аккаунт" (Светлая) */
-        .btn-register {
-            background-color: #ffffff;
+        .brand-sub {
+            font-size: 20px;
+            font-weight: 300;
             color: #000000;
         }
 
-        .btn-register:hover {
-            background-color: #f5f5f5;
+        /* Информационные блоки */
+        .info-block {
+            margin-bottom: 25px;
         }
 
-        /* Подпись версии внизу */
+        .info-title {
+            font-size: 20px;
+            font-weight: 300;
+            color: #000000;
+            margin-bottom: 4px;
+        }
+
+        .info-desc {
+            font-size: 15px;
+            font-weight: 300;
+            color: #a0a0a0;
+        }
+
+        /* Стили полей ввода */
+        .input-group {
+            position: relative;
+            width: 100%;
+            margin-bottom: 22px;
+        }
+
+        .input-field {
+            font-family: '42dot Sans', sans-serif;
+            width: 100%;
+            font-size: 18px;
+            font-weight: 300;
+            padding: 10px 40px 10px 0;
+            border: none;
+            border-bottom: 1px solid #000000;
+            background: transparent;
+            outline: none;
+            color: #000000;
+        }
+
+        .input-field::placeholder {
+            color: #a0a0a0;
+            font-weight: 300;
+        }
+
+        /* Иконка статуса заполнения */
+        .status-icon {
+            position: absolute;
+            right: 4px;
+            bottom: 12px;
+            width: 18px;
+            height: 18px;
+            border: 1px solid #000000;
+            background-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.2s ease;
+        }
+
+        /* Стрелочка/галочка внутри кастомной иконки */
+        .status-icon::after {
+            content: '';
+            width: 4px;
+            height: 8px;
+            border: solid #ffffff;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+            margin-bottom: 2px;
+            display: none;
+        }
+
+        .input-field:not(:placeholder-shown) + .status-icon {
+            opacity: 1;
+            background-color: #000000;
+        }
+
+        .input-field:not(:placeholder-shown) + .status-icon::after {
+            display: block;
+        }
+
+        /* Список требований к паролю (Шаг 2) */
+        .password-requirements {
+            list-style: none;
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .req-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 16px;
+            font-weight: 300;
+            color: #000000;
+        }
+
+        /* Четкие квадратные чекбоксы для паролей */
+        .req-box {
+            width: 18px;
+            height: 18px;
+            border: 1px solid #000000;
+            background-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+
+        .req-box::after {
+            content: '';
+            width: 4px;
+            height: 8px;
+            border: solid #ffffff;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+            margin-bottom: 2px;
+            display: none;
+        }
+
+        .req-item.valid .req-box {
+            background-color: #000000;
+        }
+
+        .req-item.valid .req-box::after {
+            display: block;
+        }
+
+        /* Блок ввода кода из 4-х цифр (Шаг 3) */
+        .code-group {
+            display: flex;
+            gap: 16px;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .code-input {
+            font-family: '42dot Sans', sans-serif;
+            width: 52px;
+            height: 52px;
+            border: 1px solid #000000;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 400;
+            outline: none;
+            background: transparent;
+        }
+
+        /* Нижний блок с кнопкой "Продолжить" */
+        .footer-section {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .btn-continue {
+            font-family: '42dot Sans', sans-serif;
+            width: 100%;
+            padding: 18px;
+            font-size: 18px;
+            font-weight: 400;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            text-align: center;
+            /* По умолчанию серая (неактивное состояние) */
+            background-color: #666666;
+            color: #ffffff;
+        }
+
+        /* Активное состояние кнопки */
+        .btn-continue.ready {
+            background-color: #000000;
+        }
+
+        /* Версия */
         .version {
             font-size: 13px;
-            font-weight: 300; /* Light */
+            font-weight: 300;
             font-style: italic;
             color: #7f7f7f;
-            z-index: 2;
-            margin-top: 20px;
         }
     </style>
 </head>
 <body>
 
-    <div class="decor decor-top-right"></div>
-    <div class="decor decor-left"></div>
-    <div class="decor decor-bottom-right"></div>
+    <div class="header-section">
+        <button class="btn-back" id="backBtn" onclick="prevStep()">назад</button>
+    </div>
 
-    <div class="main-container">
-        
-        <div class="brand-section">
-            <img src="https://raw.githubusercontent.com/LumoCreator/Ion/refs/heads/main/LOGO.svg" alt="Ion Логотип" class="logo">
-            <p class="subtitle">социальная сеть</p>
+    <div class="step-container">
+
+        <div class="register-step active" id="step1">
+            <h2 class="step-title">Создание аккаунта - шаг 1</h2>
+            <div class="brand-row">
+                <img src="https://raw.githubusercontent.com/LumoCreator/Ion/refs/heads/main/LOGO.svg" alt="Ion" class="logo">
+                <span class="brand-divider">—</span>
+                <span class="brand-sub">социальная сеть</span>
+            </div>
+
+            <div class="info-block">
+                <h3 class="info-title">Ваши данные</h3>
+                <p class="info-desc" id="step1Desc">это безопасно.</p>
+            </div>
+
+            <div class="input-group">
+                <input type="email" class="input-field" id="email" placeholder="email" oninput="validateStep1()">
+                <div class="status-icon"></div>
+            </div>
+            <div class="input-group">
+                <input type="text" class="input-field" id="firstname" placeholder="имя" oninput="validateStep1()">
+                <div class="status-icon"></div>
+            </div>
+            <div class="input-group">
+                <input type="text" class="input-field" id="lastname" placeholder="фамилия (по желанию)" oninput="validateStep1()">
+                <div class="status-icon"></div>
+            </div>
+            <div class="input-group">
+                <input type="text" class="input-field" id="nickname" placeholder="никнейм" oninput="validateStep1()">
+                <div class="status-icon"></div>
+            </div>
+            <div class="input-group">
+                <input type="text" class="input-field" id="birthdate" placeholder="день рождения" oninput="validateStep1()">
+                <div class="status-icon"></div>
+            </div>
         </div>
 
-        <div class="button-group">
-            <button class="btn btn-login" onclick="handleLogin()">Войти в аккаунт</button>
-            <button class="btn btn-register" onclick="handleRegister()">Создать аккаунт</button>
+        <div class="register-step" id="step2">
+            <h2 class="step-title">Создание аккаунта - шаг 2</h2>
+            <div class="brand-row">
+                <img src="https://raw.githubusercontent.com/LumoCreator/Ion/refs/heads/main/LOGO.svg" alt="Ion" class="logo">
+                <span class="brand-divider">—</span>
+                <span class="brand-sub">социальная сеть</span>
+            </div>
+
+            <div class="info-block">
+                <h3 class="info-title">Придумайте пароль</h3>
+                <p class="info-desc">он будет использоваться для входа</p>
+            </div>
+
+            <div class="input-group">
+                <input type="password" class="input-field" id="password" placeholder="Пароль" oninput="validateStep2()">
+            </div>
+            <div class="input-group">
+                <input type="password" class="input-field" id="password_confirm" placeholder="Повторите пароль" oninput="validateStep2()">
+            </div>
+
+            <ul class="password-requirements">
+                <li class="req-item" id="reqMatch">
+                    <div class="req-box"></div> — пароли совпадают
+                </li>
+                <li class="req-item" id="reqLength">
+                    <div class="req-box"></div> — больше 6-и символов
+                </li>
+                <li class="req-item" id="reqSpecial">
+                    <div class="req-box"></div> — есть хотя бы один специальный символ
+                </li>
+            </ul>
+        </div>
+
+        <div class="register-step" id="step3">
+            <h2 class="step-title">Создание аккаунта - шаг 3</h2>
+            <div class="brand-row">
+                <img src="https://raw.githubusercontent.com/LumoCreator/Ion/refs/heads/main/LOGO.svg" alt="Ion" class="logo">
+                <span class="brand-divider">—</span>
+                <span class="brand-sub">социальная сеть</span>
+            </div>
+
+            <div class="info-block">
+                <h3 class="info-title">Введите код из Email</h3>
+                <p class="info-desc" id="codeSentDesc">код отправлен на email:</p>
+            </div>
+
+            <div class="code-group">
+                <input type="text" maxlength="1" class="code-input" oninput="moveCodeFocus(this, 0)" onkeydown="backspaceCode(this, 0)">
+                <input type="text" maxlength="1" class="code-input" oninput="moveCodeFocus(this, 1)" onkeydown="backspaceCode(this, 1)">
+                <input type="text" maxlength="1" class="code-input" oninput="moveCodeFocus(this, 2)" onkeydown="backspaceCode(this, 2)">
+                <input type="text" maxlength="1" class="code-input" oninput="moveCodeFocus(this, 3)" onkeydown="backspaceCode(this, 3)">
+            </div>
         </div>
 
     </div>
 
-    <div class="version">demo version - 1.0</div>
+    <div class="footer-section">
+        <button class="btn-continue" id="continueBtn" onclick="nextStep()">Продолжить</button>
+        <div class="version">demo version - 1.0</div>
+    </div>
 
     <script>
-        function handleLogin() {
-            alert('Переход к авторизации (здесь будет вызов окна входа или перенаправление)');
+        let currentStep = 1;
+        const totalSteps = 3;
+
+        // Элементы управления
+        const continueBtn = document.getElementById('continueBtn');
+        const backBtn = document.getElementById('backBtn');
+
+        // Массив значений для кода подтверждения
+        let codeValues = ["", "", "", ""];
+
+        // Управление видимостью кнопки Назад
+        function updateBackButton() {
+            if (currentStep === 1) {
+                backBtn.style.visibility = 'hidden';
+            } else {
+                backBtn.style.visibility = 'visible';
+            }
+        }
+        updateBackButton();
+
+        // Проверка Шага 1
+        function validateStep1() {
+            const email = document.getElementById('email').value.trim();
+            const firstname = document.getElementById('firstname').value.trim();
+            const nickname = document.getElementById('nickname').value.trim();
+            const birthdate = document.getElementById('birthdate').value.trim();
+
+            // Фамилия необязательна, проверяем остальные
+            if (email !== "" && firstname !== "" && nickname !== "" && birthdate !== "") {
+                continueBtn.classList.add('ready');
+                return true;
+            } else {
+                continueBtn.classList.remove('ready');
+                return false;
+            }
         }
 
-        function handleRegister() {
-            alert('Переход к регистрации (здесь будет логика создания аккаунта)');
+        // Проверка Шага 2 (Пароли и Галочки)
+        function validateStep2() {
+            const pass = document.getElementById('password').value;
+            const confirm = document.getElementById('password_confirm').value;
+
+            // 1. Проверка совпадения
+            const match = (pass === confirm && pass !== "");
+            document.getElementById('reqMatch').classList.toggle('valid', match);
+
+            // 2. Проверка длины (больше 6 символов, то есть от 7)
+            const lengthValid = pass.length > 6;
+            document.getElementById('reqLength').classList.toggle('valid', lengthValid);
+
+            // 3. Проверка спецсимвола
+            const specialValid = /[!@#$%^&*(),.?":{}|<>_+\-\[\]\\\/]/.test(pass);
+            document.getElementById('reqSpecial').classList.toggle('valid', specialValid);
+
+            if (match && lengthValid && specialValid) {
+                continueBtn.classList.add('ready');
+                return true;
+            } else {
+                continueBtn.classList.remove('ready');
+                return false;
+            }
+        }
+
+        // Автофокус по ячейкам кода (Шаг 3)
+        function moveCodeFocus(input, index) {
+            codeValues[index] = input.value;
+            
+            // Если ввели символ, прыгаем вперед
+            if (input.value.length === 1 && index < 3) {
+                input.nextElementSibling.focus();
+            }
+            validateStep3();
+        }
+
+        function backspaceCode(input, index) {
+            // Если нажали Backspace в пустой ячейке, прыгаем назад
+            if (event.key === 'Backspace' && input.value.length === 0 && index > 0) {
+                input.previousElementSibling.focus();
+            }
+        }
+
+        function validateStep3() {
+            const allFilled = codeValues.every(val => val.trim() !== "");
+            if (allFilled) {
+                continueBtn.classList.add('ready');
+                return true;
+            } else {
+                continueBtn.classList.remove('ready');
+                return false;
+            }
+        }
+
+        // Логика перехода к следующему шагу
+        function nextStep() {
+            if (!continueBtn.classList.contains('ready')) return;
+
+            if (currentStep === 1) {
+                // Передаем email во фразу на 3 шаге
+                const emailVal = document.getElementById('email').value.trim();
+                document.getElementById('codeSentDesc').innerText = `код отправлен на email: ${emailVal}`;
+                
+                goToStep(2);
+                validateStep2();
+            } else if (currentStep === 2) {
+                goToStep(3);
+                validateStep3();
+            } else if (currentStep === 3) {
+                alert('Регистрация успешно завершена!');
+            }
+        }
+
+        // Логика перехода назад
+        function prevStep() {
+            if (currentStep > 1) {
+                goToStep(currentStep - 1);
+                if (currentStep === 1) validateStep1();
+                if (currentStep === 2) validateStep2();
+            }
+        }
+
+        // Переключатель классов видимости
+        function goToStep(step) {
+            document.getElementById(`step${currentStep}`).classList.remove('active');
+            currentStep = step;
+            document.getElementById(`step${currentStep}`).classList.add('active');
+            updateBackButton();
         }
     </script>
-
 </body>
 </html>

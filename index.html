@@ -15,14 +15,14 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            -webkit-tap-highlight-color: transparent; /* Убирает стандартную синеву при тапе на iOS/Android */
+            -webkit-tap-highlight-color: transparent;
         }
 
         html, body {
             height: 100%;
             background-color: #ffffff;
             font-family: '42dot Sans', sans-serif;
-            overflow-x: hidden;
+            overflow: hidden;
         }
 
         body {
@@ -30,12 +30,12 @@
             flex-direction: column;
             justify-content: space-between;
             align-items: center;
-            padding: clamp(15px, 4vh, 40px) 24px;
+            padding: clamp(10px, 3vh, 25px) 24px clamp(20px, 4vh, 40px) 24px;
             position: relative;
             min-height: 100vh;
         }
 
-        /* Декоративные геометрические элементы фона — видны ВСЕГДА */
+        /* Декоративные геометрические элементы фона */
         .decor {
             position: absolute;
             background-color: #000000;
@@ -44,7 +44,6 @@
             pointer-events: none;
         }
 
-        /* Верхний правый блок */
         .decor-top-right {
             width: clamp(140px, 28vh, 240px);
             height: clamp(140px, 28vh, 240px);
@@ -55,7 +54,6 @@
             outline: 2px solid #000000;
         }
 
-        /* Левый средний блок */
         .decor-left {
             width: clamp(110px, 22vh, 190px);
             height: clamp(110px, 22vh, 190px);
@@ -66,7 +64,6 @@
             outline: 2px solid #000000;
         }
 
-        /* Нижний правый блок */
         .decor-bottom-right {
             width: clamp(130px, 25vh, 210px);
             height: clamp(130px, 25vh, 210px);
@@ -77,15 +74,14 @@
             border: clamp(8px, 1.8vh, 14px) solid #000000;
         }
 
-        /* Шапка приложения с кнопкой Назад */
+        /* Шапка приложения — Кнопка назад поднята максимально выше */
         .header-section {
             width: 100%;
             max-width: 400px;
             display: flex;
             justify-content: flex-start;
             z-index: 3;
-            min-height: 50px;
-            margin-bottom: 15px;
+            min-height: 40px;
         }
 
         .btn-back {
@@ -95,7 +91,7 @@
             color: #ffffff;
             background-color: #000000;
             border: none;
-            padding: 12px 28px;
+            padding: 10px 26px;
             cursor: pointer;
             outline: none;
             border-radius: 0;
@@ -105,7 +101,6 @@
             transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
         }
 
-        /* Активное состояние кнопки назад */
         .btn-back.visible {
             opacity: 1;
             transform: translateX(0);
@@ -116,45 +111,52 @@
             transform: scale(0.95);
         }
 
-        /* Основной контейнер для экранов */
+        /* Главный стабильный контейнер. Исключает любые прыжки элементов */
         .screen-container {
             width: 100%;
             max-width: 400px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+            height: 460px; /* Фиксированная высота рабочей зоны */
+            display: relative;
             z-index: 2;
-            margin: 20px 0;
+            margin: auto 0;
         }
 
-        /* Общие стили для экранов с плавной анимацией */
+        /* Общие правила для экранов */
         .app-screen {
-            display: none;
-            flex-direction: column;
+            position: absolute;
             width: 100%;
-        }
-
-        .app-screen.active {
+            max-width: 400px;
+            height: 460px;
             display: flex;
-            animation: screenFadeIn 0.4s ease forwards;
+            flex-direction: column;
+            justify-content: flex-start;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.35s ease, transform 0.35s ease, visibility 0.35s;
+            transform: translateY(10px);
         }
 
-        @keyframes screenFadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(8px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        /* Активация экрана с плавной проявкой */
+        .app-screen.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transform: translateY(0);
         }
 
         /* ================= ЭКРАН ВЫБОРА (ПРИВЕТСТВИЕ) ================= */
+        .welcome-wrapper {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+        }
+
         .welcome-brand {
             text-align: center;
-            margin-bottom: clamp(40px, 7vh, 75px);
+            margin-bottom: 50px;
         }
 
         .welcome-logo {
@@ -171,9 +173,9 @@
             letter-spacing: 0.5px;
         }
 
-        /* ================= ЭКРАНЫ РЕГИСТРАЦИИ ================= */
+        /* ================= ОБЩАЯ ШАПКА ДЛЯ ШАГОВ РЕГИСТРАЦИИ ================= */
         .step-title {
-            font-size: clamp(17px, 2.5vh, 19px);
+            font-size: 18px;
             font-weight: 300;
             color: #000000;
             margin-bottom: 10px;
@@ -183,11 +185,11 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: clamp(25px, 4.5vh, 40px);
+            margin-bottom: 25px;
         }
 
         .logo-mini {
-            height: clamp(36px, 4.5vh, 46px);
+            height: 42px;
             width: auto;
         }
 
@@ -198,20 +200,21 @@
         }
 
         .brand-sub {
-            font-size: clamp(17px, 2.3vh, 19px);
+            font-size: 18px;
             font-weight: 300;
             color: #000000;
         }
 
         .info-block {
-            margin-bottom: clamp(20px, 3.5vh, 30px);
+            margin-bottom: 20px;
+            min-height: 46px; /* Защита от прыжка строки описания */
         }
 
         .info-title {
-            font-size: clamp(17px, 2.5vh, 19px);
+            font-size: 18px;
             font-weight: 300;
             color: #000000;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
 
         .info-desc {
@@ -220,19 +223,19 @@
             color: #a0a0a0;
         }
 
-        /* Поля ввода */
+        /* Поля ввода и группы ввода */
         .input-group {
             position: relative;
             width: 100%;
-            margin-bottom: clamp(12px, 2.2vh, 20px);
+            margin-bottom: 14px;
         }
 
         .input-field {
             font-family: '42dot Sans', sans-serif;
             width: 100%;
-            font-size: clamp(15px, 2.2vh, 17px);
+            font-size: 16px;
             font-weight: 300;
-            padding: 10px 40px 10px 0;
+            padding: 8px 40px 8px 0;
             border: none;
             border-bottom: 1px solid #000000;
             background: transparent;
@@ -251,11 +254,11 @@
             font-weight: 300;
         }
 
-        /* Индикатор-галочка заполненности полей */
+        /* Кастомный квадратный индикатор чекбокса */
         .status-icon {
             position: absolute;
             right: 4px;
-            bottom: 12px;
+            bottom: 10px;
             width: 18px;
             height: 18px;
             border: 1px solid #000000;
@@ -279,7 +282,6 @@
             display: none;
         }
 
-        /* Переключение состояния индикатора */
         .input-group.field-valid .status-icon {
             opacity: 1;
             transform: scale(1);
@@ -290,13 +292,13 @@
             display: block;
         }
 
-        /* Валидация пароля (Шаг 2) */
+        /* Валидация требований к паролям (Шаг 2) */
         .password-requirements {
             list-style: none;
             margin-top: 15px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
         }
 
         .req-item {
@@ -339,7 +341,7 @@
             display: block;
         }
 
-        /* Код подтверждения (Шаг 3) */
+        /* Группа ввода цифр SMS (Шаг 3) */
         .code-group {
             display: flex;
             justify-content: space-between;
@@ -354,7 +356,7 @@
             aspect-ratio: 1 / 1;
             border: 1px solid #000000;
             text-align: center;
-            font-size: clamp(18px, 3vh, 24px);
+            font-size: 22px;
             font-weight: 400;
             outline: none;
             background: transparent;
@@ -367,7 +369,7 @@
             background-color: #fcfcfc;
         }
 
-        /* ================= СТИЛИ КНОПОК ================= */
+        /* ================= КНОПКИ И УПРАВЛЕНИЕ ================= */
         .button-group {
             width: 100%;
             display: flex;
@@ -380,7 +382,7 @@
             font-size: 16px;
             font-weight: 400;
             width: 100%;
-            padding: clamp(14px, 2vh, 18px);
+            padding: 16px;
             border: 1px solid #000000;
             cursor: pointer;
             transition: transform 0.1s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.3s ease, color 0.3s ease;
@@ -390,7 +392,7 @@
             border-radius: 0;
         }
 
-        /* Тактильная микро-анимация сжатия при клике на любую кнопку */
+        /* Приятная микро-анимация нажатия */
         .btn:active {
             transform: scale(0.97);
         }
@@ -410,23 +412,22 @@
             background-color: #666666;
             color: #ffffff;
             border: none;
-            display: none; /* Включается только внутри регистрации */
+            display: none;
         }
 
         .btn-continue.ready {
             background-color: #000000;
         }
 
-        /* Нижний блок */
+        /* Нижний блок футера */
         .footer-section {
             width: 100%;
             max-width: 400px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: clamp(15px, 3vh, 35px);
+            gap: 20px;
             z-index: 3;
-            margin-top: 15px;
         }
 
         .version {
@@ -447,13 +448,15 @@
     <div class="screen-container">
 
         <div class="app-screen active" id="screenWelcome">
-            <div class="welcome-brand">
-                <img src="https://raw.githubusercontent.com/LumoCreator/Ion/refs/heads/main/LOGO.svg" alt="Ion Логотип" class="welcome-logo">
-                <p class="welcome-subtitle">социальная сеть</p>
-            </div>
-            <div class="button-group">
-                <button class="btn btn-login" onclick="alert('Переход к авторизации')">Войти в аккаунт</button>
-                <button class="btn btn-register" onclick="goToStep(1)">Создать аккаунт</button>
+            <div class="welcome-wrapper">
+                <div class="welcome-brand">
+                    <img src="https://raw.githubusercontent.com/LumoCreator/Ion/refs/heads/main/LOGO.svg" alt="Ion Логотип" class="welcome-logo">
+                    <p class="welcome-subtitle">социальная сеть</p>
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-login" onclick="alert('Переход к авторизации')">Войти в аккаунт</button>
+                    <button class="btn btn-register" onclick="goToStep(1)">Создать аккаунт</button>
+                </div>
             </div>
         </div>
 
@@ -554,13 +557,13 @@
         const backBtn = document.getElementById('backBtn');
         let codeValues = ["", "", "", ""];
 
-        // Фильтр никнейма: только латиница, цифры и нижнее подчеркивание
+        // Фильтр никнейма: строго регулярное выражение на латиницу А-Z, цифры и _
         function cleanNicknameInput() {
             const nicknameField = document.getElementById('nickname');
             nicknameField.value = nicknameField.value.replace(/[^a-zA-Z0-9_]/g, '');
         }
 
-        // Автоподстановка точек в дату и запрет букв
+        // Автоподстановка точек и фильтрация даты (ДД.ММ.ГГГГ)
         function formatBirthdateInput() {
             const dateField = document.getElementById('birthdate');
             let val = dateField.value.replace(/\D/g, ''); 
@@ -586,7 +589,7 @@
             document.getElementById('group_lastname').classList.toggle('field-valid', lastname !== "");
             document.getElementById('group_nickname').classList.toggle('field-valid', nickname !== "");
             
-            // Чекбокс появляется строго при 10 символах (ДД.ММ.ГГГГ)
+            // Галочка появляется строго при завершении ввода даты (10 символов)
             const isBirthdateComplete = (birthdate.length === 10);
             document.getElementById('group_birthdate').classList.toggle('field-valid', isBirthdateComplete);
 
@@ -622,7 +625,7 @@
             }
         }
 
-        // Фокусировка кода из СМС/Email
+        // Фокусировка на ячейках кода
         function moveCodeFocus(input, index) {
             codeValues[index] = input.value;
             if (input.value.length === 1 && index < 3) {
@@ -648,8 +651,9 @@
             }
         }
 
-        // Переключение экранов и изменение углов наклона декораций
+        // Безопасное переключение состояний экранов и вращение декораций
         function goToStep(target) {
+            // Удаляем активные классы со всех экранов
             document.getElementById('screenWelcome').classList.remove('active');
             document.getElementById('screenStep1').classList.remove('active');
             document.getElementById('screenStep2').classList.remove('active');
@@ -665,7 +669,7 @@
                 backBtn.classList.remove('visible');
                 continueBtn.style.display = 'none';
                 
-                // Стандартное вращение на первом экране
+                // Квадраты всегда на месте, плавно поворачиваются
                 topDecor.style.transform = 'rotate(25deg)';
                 leftDecor.style.transform = 'translateY(-50%) rotate(35deg)';
             } else {

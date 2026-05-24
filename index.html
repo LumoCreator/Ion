@@ -640,6 +640,14 @@
             stroke-width: 2;
         }
 
+        /* Кнопка Опубликовать в ее обычном и заблокированном состоянии */
+        .btn-publish-submit:disabled {
+            background: #555555;
+            cursor: not-allowed;
+            opacity: 0.7;
+            transform: none !important;
+        }
+
         /* ================= КНОПКИ И УПРАВЛЕНИЕ ================= */
         .button-group {
             width: 100%;
@@ -861,7 +869,7 @@
                 </label>
                 
                 <img id="filePreview" alt="Превью">
-                <button class="btn btn-login" style="margin-top:10px;" onclick="publishPost()">Опубликовать</button>
+                <button class="btn btn-login btn-publish-submit" id="publishSubmitBtn" style="margin-top:10px;" onclick="publishPost()">Опубликовать</button>
             </div>
         </div>
 
@@ -1275,6 +1283,7 @@
         async function publishPost() {
             const textContent = document.getElementById('postText').value.trim();
             const fileInput = document.getElementById('postFileInput');
+            const submitBtn = document.getElementById('publishSubmitBtn');
             const file = fileInput.files[0];
             let uploadedImageUrl = null;
 
@@ -1283,50 +1292,69 @@
                 return;
             }
 
+            // Переключаем текст кнопки и блокируем её
+            submitBtn.innerText = 'Публикация...';
+            submitBtn.disabled = true;
+
+            // Если сессии нет, используем дефолтный uuid (чтобы избежать ошибок бэкенда)
             const authorId = currentUser ? currentUser.id : '00000000-0000-0000-0000-000000000000';
 
-            if (file) {
-                const fileExt = file.name.split('.').pop();
-                const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-                const filePath = `${authorId}/${fileName}`;
+            try {
+                if (file) {
+                    const fileExt = file.name.split('.').pop();
+                    const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+                    const filePath = `${authorId}/${fileName}`;
 
-                const { data: storageData, error: storageError } = await clientSupabase.storage
-                    .from('post-images')
-                    .upload(filePath, file);
+                    const { data: storageData, error: storageError } = await clientSupabase.storage
+                        .from('post-images')
+                        .upload(filePath, file);
 
-                if (storageError) {
-                    alert('Ошибка загрузки фото: ' + storageError.message);
-                    return;
+                    if (storageError) {
+                        throw new Error('ошибка загрузки: failed to fetch (' + storageError.message + ')');
+                    }
+
+                    const { data: publicUrlData } = clientSupabase.storage
+                        .from('post-images')
+                        .getPublicUrl(filePath);
+
+                    uploadedImageUrl = publicUrlData.publicUrl;
                 }
 
-                const { data: publicUrlData } = clientSupabase.storage
-                    .from('post-images')
-                    .getPublicUrl(filePath);
+                const { error: postError } = await clientSupabase
+                    .from('posts')
+                    .insert({
+                        user_id: authorId,
+                        text: textContent,
+                        image_url: uploadedImageUrl
+                    });
 
-                uploadedImageUrl = publicUrlData.publicUrl;
-            }
+                if (postError) {
+                    throw new Error(postError.message);
+                }
 
-            const { error: postError } = await clientSupabase
-                .from('posts')
-                .insert({
-                    user_id: authorId,
-                    text: textContent,
-                    image_url: uploadedImageUrl
-                });
-
-            if (postError) {
-                alert('Ошибка публикации поста: ' + postError.message);
-            } else {
+                // Успешно: сбрасываем форму публикации
                 document.getElementById('postText').value = '';
                 fileInput.value = '';
                 document.getElementById('filePreview').style.display = 'none';
+                
+                // Возвращаем исходный вид кнопке перед уходом
+                submitBtn.innerText = 'Опубликовать';
+                submitBtn.disabled = false;
+
                 goToStep('feed');
+
+            } catch (error) {
+                alert('Ошибка публикации поста: ' + error.message);
+                
+                // Сбой: моментально восстанавливаем кнопку и возвращаем надпись
+                submitBtn.innerText = 'Опубликовать';
+                submitBtn.disabled = false;
             }
         }
 
         async function loadFeedPosts() {
             const postsContainer = document.getElementById('postsContainer');
-            postsContainer.innerHTML = 'Загрузка постов...';
+            postsContainer.innerHTML = '<p style="text-align:center; color:#a0a0a0; font-weight:300; padding: 20px 0;">Загрузка постов...</p>';
 
             const { data: posts, error: postsError } = await clientSupabase
                 .from('posts')
@@ -1334,12 +1362,12 @@
                 .order('created_at', { ascending: false });
 
             if (postsError) {
-                postsContainer.innerHTML = 'Ошибка загрузки: ' + postsError.message;
+                postsContainer.innerHTML = '<p style="text-align:center; color:#ff0000; font-weight:300; padding: 20px 0;">Ошибка загрузки: ' + postsError.message + '</p>';
                 return;
             }
 
-            if (posts.length === 0) {
-                postsContainer.innerHTML = '<p style="text-align:center; color:#a0a0a0; font-weight:300;">Постов пока нет. Будьте первым!</p>';
+            if (!posts || posts.length === 0) {
+                postsContainer.innerHTML = '<p style="text-align:center; color:#a0a0a0; font-weight:300; padding: 20px 0;">Постов пока нет. Будьте первым!</p>';
                 return;
             }
 
@@ -1348,11 +1376,13 @@
             for (const post of posts) {
                 let authorName = 'User_' + post.user_id.substring(0, 5);
                 
+                // Безопасный запрос лайков
                 const { count: likesCount } = await clientSupabase
                     .from('likes')
                     .select('*', { count: 'exact', head: true })
                     .eq('post_id', post.id);
 
+                // Безопасный запрос комментариев
                 const { data: comments } = await clientSupabase
                     .from('comments')
                     .select('*')

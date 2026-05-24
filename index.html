@@ -53,6 +53,7 @@
             right: clamp(-45px, -7vh, -65px);
             border: 4px solid #ffffff;
             outline: 2px solid #000000;
+            transform: rotate(25deg);
         }
 
         .decor-left {
@@ -62,6 +63,7 @@
             top: 45%;
             border: 4px solid #ffffff;
             outline: 2px solid #000000;
+            transform: translateY(-50%) rotate(35deg);
         }
 
         .decor-bottom-right {
@@ -71,6 +73,7 @@
             right: clamp(-25px, -5vh, -45px);
             background-color: transparent;
             border: clamp(6px, 1.5vh, 12px) solid #000000;
+            transform: rotate(15deg);
         }
 
         /* Шапка приложения с кнопкой Назад */
@@ -804,8 +807,8 @@
         const SUPABASE_URL = 'https://rnqdaqbvriztmfxwcxri.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJucWRhcWJ2cml6dG1meHdjeHJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2MjcwMjEsImV4cCI6MjA5NTIwMzAyMX0.S3JwkpGYsjMLoT2bBZxrDq4B8mEPnZY9FLTelaqqh3s';
         
-        // Исправлено: прямая инициализация из глобального объекта библиотеки
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Исправлено: используем уже объявленный библиотекой глобальный объект 'supabase' без повторного создания через const/let
+        const clientSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let currentAppState = 'welcome'; 
         let currentUser = null; 
@@ -821,7 +824,7 @@
             publish: { top: -20, left: 40 }
         };
 
-        // Последние сохраненные координаты мыши для плавного рендеринга
+        // Последние координаты мыши
         let lastMouseX = 0;
         let lastMouseY = 0;
 
@@ -878,7 +881,7 @@
                 document.getElementById('screenPublish').classList.add('active');
             }
 
-            // Принудительно обновляем положение квадратов под новый экран
+            // Синхронно обновляем положение под новый экран
             updateDecorPositions(lastMouseX, lastMouseY);
         }
 
@@ -888,19 +891,18 @@
             const leftDecor = document.getElementById('decorLeft');
             const bottomDecor = document.getElementById('decorBottomRight');
 
-            // Находим ключ для текущего состояния экрана
             let stateKey = (typeof currentAppState === 'number') ? 'step' + currentAppState : currentAppState;
             let currentAngles = baseAngles[stateKey] || { top: 0, left: 0 };
 
-            // Расчет смещения на основе координат мыши (интенсивность параллакса)
-            let moveTopX = mouseX * 25;
-            let moveTopY = mouseY * 25;
-            let moveLeftX = mouseX * -35;
-            let moveLeftY = mouseY * -35;
-            let moveBottomX = mouseX * 15;
-            let moveBottomY = mouseY * 15;
+            // Интенсивность смещения за мышью
+            let moveTopX = mouseX * 30;
+            let moveTopY = mouseY * 30;
+            let moveLeftX = mouseX * -40;
+            let moveLeftY = mouseY * -40;
+            let moveBottomX = mouseX * 20;
+            let moveBottomY = mouseY * 20;
 
-            // Применяем трансформации, бережно соединяя поворот и сдвиг
+            // Применяем стили: сохраняем базовый наклон через rotate() и добавляем сдвиг мыши
             if (topDecor) {
                 topDecor.style.transform = `translate(${moveTopX}px, ${moveTopY}px) rotate(${currentAngles.top}deg)`;
             }
@@ -912,9 +914,8 @@
             }
         }
 
-        // Слушатель движения мыши по всему экрану
+        // Отслеживание мыши
         document.addEventListener('mousemove', (e) => {
-            // Высчитываем нормализованные координаты от -0.5 до 0.5
             lastMouseX = (e.clientX / window.innerWidth) - 0.5;
             lastMouseY = (e.clientY / window.innerHeight) - 0.5;
             updateDecorPositions(lastMouseX, lastMouseY);
@@ -1045,7 +1046,7 @@
             continueBtn.classList.remove('ready');
 
             // 1. Создание аккаунта в системе аутентификации Supabase
-            const { data, error } = await supabase.auth.signUp({
+            const { data, error } = await clientSupabase.auth.signUp({
                 email: email,
                 password: password,
             });
@@ -1061,7 +1062,7 @@
                 currentUser = data.user;
                 
                 // 2. Обновляем автоматически созданный профиль в таблице profiles
-                const { error: profileError } = await supabase
+                const { error: profileError } = await clientSupabase
                     .from('profiles')
                     .update({ 
                         firstname: firstname,
@@ -1109,7 +1110,7 @@
                 const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
                 const filePath = `${authorId}/${fileName}`;
 
-                const { data: storageData, error: storageError } = await supabase.storage
+                const { data: storageData, error: storageError } = await clientSupabase.storage
                     .from('post-images')
                     .upload(filePath, file);
 
@@ -1119,7 +1120,7 @@
                 }
 
                 // Получаем публичную ссылку на файл
-                const { data: publicUrlData } = supabase.storage
+                const { data: publicUrlData } = clientSupabase.storage
                     .from('post-images')
                     .getPublicUrl(filePath);
 
@@ -1127,7 +1128,7 @@
             }
 
             // 2. Создаем запись о посте в таблице public.posts
-            const { error: postError } = await supabase
+            const { error: postError } = await clientSupabase
                 .from('posts')
                 .insert({
                     user_id: authorId,
@@ -1152,7 +1153,7 @@
             postsContainer.innerHTML = 'Загрузка постов...';
 
             // Получаем посты
-            const { data: posts, error: postsError } = await supabase
+            const { data: posts, error: postsError } = await clientSupabase
                 .from('posts')
                 .select('*')
                 .order('created_at', { ascending: false });
@@ -1174,13 +1175,13 @@
                 let authorName = 'User_' + post.user_id.substring(0, 5);
                 
                 // Считаем общее количество лайков
-                const { count: likesCount } = await supabase
+                const { count: likesCount } = await clientSupabase
                     .from('likes')
                     .select('*', { count: 'exact', head: true })
                     .eq('post_id', post.id);
 
                 // Получаем все комментарии к посту
-                const { data: comments } = await supabase
+                const { data: comments } = await clientSupabase
                     .from('comments')
                     .select('*')
                     .eq('post_id', post.id)
@@ -1238,7 +1239,7 @@
         async function toggleLike(postId) {
             const authorId = currentUser ? currentUser.id : '00000000-0000-0000-0000-000000000000';
 
-            const { data: existingLike } = await supabase
+            const { data: existingLike } = await clientSupabase
                 .from('likes')
                 .select('*')
                 .eq('post_id', postId)
@@ -1246,12 +1247,12 @@
                 .single();
 
             if (existingLike) {
-                await supabase.from('likes').delete().eq('id', existingLike.id);
+                await clientSupabase.from('likes').delete().eq('id', existingLike.id);
             } else {
-                await supabase.from('likes').insert({ post_id: postId, user_id: authorId });
+                await clientSupabase.from('likes').insert({ post_id: postId, user_id: authorId });
             }
             
-            const { count: currentLikes } = await supabase
+            const { count: currentLikes } = await clientSupabase
                 .from('likes')
                 .select('*', { count: 'exact', head: true })
                 .eq('post_id', postId);
@@ -1267,7 +1268,7 @@
 
             const authorId = currentUser ? currentUser.id : '00000000-0000-0000-0000-000000000000';
 
-            const { error } = await supabase
+            const { error } = await clientSupabase
                 .from('comments')
                 .insert({
                     post_id: postId,

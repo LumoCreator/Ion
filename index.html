@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ion — Социальная сеть</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=42dot+Sans:wght@300;400&display=swap" rel="stylesheet">
+
+    <style>
+        /* Общие настройки страницы */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: '42dot Sans', sans-serif;
+            background-color: #ffffff;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+            padding: 40px 20px;
+        }
+
+        /* Декоративные геометрические элементы по углам макета */
+        .decor {
+            position: absolute;
+            background-color: #000000;
+            z-index: 1;
+        }
+
+        /* Верхний правый блок */
+        .decor-top-right {
+            width: 250px;
+            height: 250px;
+            top: -120px;
+            right: -80px;
+            transform: rotate(25deg);
+            border: 4px solid #ffffff;
+            outline: 2px solid #000000;
+        }
+
+        /* Левый средний блок */
+        .decor-left {
+            width: 200px;
+            height: 200px;
+            left: -110px;
+            top: 40%;
+            transform: translateY(-50%) rotate(35deg);
+            border: 4px solid #ffffff;
+            outline: 2px solid #000000;
+        }
+
+        /* Нижний правый блок (прозрачный внутри, только жирный контур) */
+        .decor-bottom-right {
+            width: 220px;
+            height: 220px;
+            bottom: -100px;
+            right: -60px;
+            transform: rotate(15deg);
+            background-color: transparent;
+            border: 15px solid #000000;
+        }
+
+        /* Контент-контейнер */
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            max-width: 400px;
+            z-index: 2;
+        }
+
+        /* Блок логотипа и подписи */
+        .brand-section {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        .logo {
+            width: 140px;
+            height: auto;
+            display: block;
+            margin: 0 auto 15px auto;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            font-weight: 300; /* Light */
+            color: #2c2c2c;
+            letter-spacing: 0.5px;
+        }
+
+        /* Блок с кнопками */
+        .button-group {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .btn {
+            font-family: '42dot Sans', sans-serif;
+            font-size: 16px;
+            font-weight: 400; /* Regular */
+            width: 100%;
+            padding: 18px;
+            border: 1px solid #000000;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        /* Кнопка "Войти в аккаунт" (Тёмный градиент как на макете) */
+        .btn-login {
+            background: linear-gradient(180deg, #1c1c1c 0%, #0d0d0d 100%);
+            color: #ffffff;
+            border: none;
+        }
+
+        .btn-login:hover {
+            background: linear-gradient(180deg, #2d2d2d 0%, #1a1a1a 100%);
+        }
+
+        /* Кнопка "Создать аккаунт" (Светлая) */
+        .btn-register {
+            background-color: #ffffff;
+            color: #000000;
+        }
+
+        .btn-register:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* Подпись версии внизу */
+        .version {
+            font-size: 13px;
+            font-weight: 300; /* Light */
+            font-style: italic;
+            color: #7f7f7f;
+            z-index: 2;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="decor decor-top-right"></div>
+    <div class="decor decor-left"></div>
+    <div class="decor decor-bottom-right"></div>
+
+    <div class="main-container">
+        
+        <div class="brand-section">
+            <img src="https://raw.githubusercontent.com/LumoCreator/Ion/refs/heads/main/LOGO.svg" alt="Ion Логотип" class="logo">
+            <p class="subtitle">социальная сеть</p>
+        </div>
+
+        <div class="button-group">
+            <button class="btn btn-login" onclick="handleLogin()">Войти в аккаунт</button>
+            <button class="btn btn-register" onclick="handleRegister()">Создать аккаунт</button>
+        </div>
+
+    </div>
+
+    <div class="version">demo version - 1.0</div>
+
+    <script>
+        function handleLogin() {
+            alert('Переход к авторизации (здесь будет вызов окна входа или перенаправление)');
+        }
+
+        function handleRegister() {
+            alert('Переход к регистрации (здесь будет логика создания аккаунта)');
+        }
+    </script>
+
+</body>
+</html>

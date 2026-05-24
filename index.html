@@ -183,7 +183,7 @@
             letter-spacing: 0.5px;
         }
 
-        /* ================= ШАПКА ДЛЯ ШАГОВ РЕГИСТРАЦИИ ================= */
+        /* ================= ШАПКА ДЛЯ ШАГОВ РЕГИСТРАЦИИ И АВТОРИЗАЦИИ ================= */
         .step-title {
             font-size: clamp(16px, 2.2vh, 18px);
             font-weight: 300;
@@ -677,9 +677,32 @@
                     <p class="welcome-subtitle">социальная сеть</p>
                 </div>
                 <div class="button-group">
-                    <button class="btn btn-login" onclick="alert('Переход к авторизации в разработке')">Войти в аккаунт</button>
+                    <button class="btn btn-login" onclick="goToStep('login')">Войти в аккаунт</button>
                     <button class="btn btn-register" onclick="goToStep(1)">Создать аккаунт</button>
                 </div>
+            </div>
+        </div>
+
+        <div class="app-screen" id="screenLogin">
+            <h2 class="step-title">Авторизация</h2>
+            <div class="brand-row">
+                <img src="https://raw.githubusercontent.com/LumoCreator/Ion/refs/heads/main/LOGO.svg" alt="Ion" class="logo-mini">
+                <span class="brand-divider">—</span>
+                <span class="brand-sub">социальная сеть</span>
+            </div>
+
+            <div class="info-block">
+                <h3 class="info-title">Вход в профиль</h3>
+                <p class="info-desc">введите ваши данные доступа</p>
+            </div>
+
+            <div class="input-group" id="group_login_email">
+                <input type="email" class="input-field" id="login_email" placeholder="email" oninput="validateLoginScreen()">
+                <div class="status-icon"></div>
+            </div>
+            <div class="input-group" id="group_login_password">
+                <input type="password" class="input-field" id="login_password" placeholder="пароль" oninput="validateLoginScreen()">
+                <div class="status-icon"></div>
             </div>
         </div>
 
@@ -807,7 +830,6 @@
         const SUPABASE_URL = 'https://rnqdaqbvriztmfxwcxri.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJucWRhcWJ2cml6dG1meHdjeHJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2MjcwMjEsImV4cCI6MjA5NTIwMzAyMX0.S3JwkpGYsjMLoT2bBZxrDq4B8mEPnZY9FLTelaqqh3s';
         
-        // Исправлено: используем уже объявленный библиотекой глобальный объект 'supabase' без повторного создания через const/let
         const clientSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let currentAppState = 'welcome'; 
@@ -817,6 +839,7 @@
         // Базовые углы поворота для анимаций экранов
         let baseAngles = {
             welcome: { top: 25, left: 35 },
+            login: { top: -10, left: 20 },
             step1: { top: 45, left: 15 },
             step2: { top: 10, left: 55 },
             step3: { top: 60, left: 5 },
@@ -836,6 +859,7 @@
         // ================= СИСТЕМА ПЕРЕКЛЮЧЕНИЯ ЭКРАНОВ =================
         function goToStep(target) {
             document.getElementById('screenWelcome').classList.remove('active');
+            document.getElementById('screenLogin').classList.remove('active');
             document.getElementById('screenStep1').classList.remove('active');
             document.getElementById('screenStep2').classList.remove('active');
             document.getElementById('screenStep3').classList.remove('active');
@@ -859,6 +883,11 @@
                 document.getElementById('screenWelcome').classList.add('active');
                 backBtn.classList.remove('visible');
                 continueBtn.style.display = 'none';
+            } else if (target === 'login') {
+                document.getElementById('screenLogin').classList.add('active');
+                backBtn.classList.add('visible');
+                continueBtn.style.display = 'block';
+                validateLoginScreen();
             } else if (target === 1) {
                 document.getElementById('screenStep1').classList.add('active');
                 backBtn.classList.add('visible');
@@ -940,7 +969,24 @@
             dateField.value = val;
         }
 
-        // Валидация Шага 1
+        // Валидация экрана Авторизации (Входа)
+        function validateLoginScreen() {
+            const email = document.getElementById('login_email').value.trim();
+            const pass = document.getElementById('login_password').value;
+
+            document.getElementById('group_login_email').classList.toggle('field-valid', email !== "");
+            document.getElementById('group_login_password').classList.toggle('field-valid', pass.length >= 6);
+
+            if (email !== "" && pass.length >= 6) {
+                continueBtn.classList.add('ready');
+                return true;
+            } else {
+                continueBtn.classList.remove('ready');
+                return false;
+            }
+        }
+
+        // Валидация Шага 1 Регистрации
         function validateStep1() {
             const email = document.getElementById('email').value.trim();
             const firstname = document.getElementById('firstname').value.trim();
@@ -965,7 +1011,7 @@
             }
         }
 
-        // Валидация Шага 2
+        // Валидация Шага 2 Регистрации
         function validateStep2() {
             const pass = document.getElementById('password').value;
             const confirm = document.getElementById('password_confirm').value;
@@ -1033,6 +1079,34 @@
             }
         }
 
+        // ================= БЭКЕНД: ВХОД В АККАУНТ =================
+        async function loginUserInSupabase() {
+            const email = document.getElementById('login_email').value.trim();
+            const password = document.getElementById('login_password').value;
+
+            continueBtn.innerText = 'Вход...';
+            continueBtn.classList.remove('ready');
+
+            const { data, error } = await clientSupabase.auth.signInWithPassword({
+                email: email,
+                password: password,
+            });
+
+            if (error) {
+                alert('Ошибка входа: ' + error.message);
+                continueBtn.innerText = 'Продолжить';
+                continueBtn.classList.add('ready');
+                return;
+            }
+
+            if (data.user) {
+                currentUser = data.user;
+                alert('Успешный вход!');
+                goToStep('feed');
+            }
+            continueBtn.innerText = 'Продолжить';
+        }
+
         // ================= БЭКЕНД: РЕГИСТРАЦИЯ ПОЛЬЗОВАТЕЛЯ =================
         async function registerUserInSupabase() {
             const email = document.getElementById('email').value.trim();
@@ -1045,14 +1119,23 @@
             continueBtn.innerText = 'Создание...';
             continueBtn.classList.remove('ready');
 
-            // 1. Создание аккаунта в системе аутентификации Supabase
+            // Создание аккаунта в системе аутентификации Supabase
             const { data, error } = await clientSupabase.auth.signUp({
                 email: email,
                 password: password,
+                options: {
+                    data: {
+                        firstname: firstname,
+                        lastname: lastname,
+                        nickname: nickname,
+                        birthdate: birthdate
+                    }
+                }
             });
 
             if (error) {
                 alert('Ошибка регистрации: ' + error.message);
+                console.error(error);
                 continueBtn.innerText = 'Продолжить';
                 continueBtn.classList.add('ready');
                 return;
@@ -1061,24 +1144,29 @@
             if (data.user) {
                 currentUser = data.user;
                 
-                // 2. Обновляем автоматически созданный профиль в таблице profiles
+                // Пробуем записать данные в таблицу profiles
                 const { error: profileError } = await clientSupabase
                     .from('profiles')
-                    .update({ 
-                        firstname: firstname,
-                        lastname: lastname,
-                        nickname: nickname,
-                        birthdate: birthdate
-                    })
-                    .eq('id', data.user.id);
+                    .insert([
+                        { 
+                            id: data.user.id,
+                            firstname: firstname,
+                            lastname: lastname,
+                            nickname: nickname,
+                            birthdate: birthdate
+                        }
+                    ]);
 
                 if (profileError) {
-                    alert('Ошибка записи профиля: ' + profileError.message);
-                } else {
-                    alert('Аккаунт успешно создан! Завершаем регистрацию.');
-                    goToStep(3);
+                    console.warn('Профиль не записался (возможно сработал триггер):', profileError.message);
                 }
+                
+                alert('Аккаунт создан! Переходим к подтверждению.');
+                goToStep(3);
+            } else {
+                alert('Ошибка: Не удалось получить сессию пользователя.');
             }
+            
             continueBtn.innerText = 'Продолжить';
         }
 
@@ -1090,7 +1178,6 @@
 
         // ================= БЭКЕНД: ЛЕНТА И ПУБЛИКАЦИЯ ПОСТОВ =================
         
-        // Публикация нового поста с возможностью загрузки фото в Storage
         async function publishPost() {
             const textContent = document.getElementById('postText').value.trim();
             const fileInput = document.getElementById('postFileInput');
@@ -1104,7 +1191,6 @@
 
             const authorId = currentUser ? currentUser.id : '00000000-0000-0000-0000-000000000000';
 
-            // 1. Если есть прикрепленный файл, загружаем его в бакет 'post-images'
             if (file) {
                 const fileExt = file.name.split('.').pop();
                 const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
@@ -1119,7 +1205,6 @@
                     return;
                 }
 
-                // Получаем публичную ссылку на файл
                 const { data: publicUrlData } = clientSupabase.storage
                     .from('post-images')
                     .getPublicUrl(filePath);
@@ -1127,7 +1212,6 @@
                 uploadedImageUrl = publicUrlData.publicUrl;
             }
 
-            // 2. Создаем запись о посте в таблице public.posts
             const { error: postError } = await clientSupabase
                 .from('posts')
                 .insert({
@@ -1142,17 +1226,14 @@
                 document.getElementById('postText').value = '';
                 fileInput.value = '';
                 document.getElementById('filePreview').style.display = 'none';
-                
                 goToStep('feed');
             }
         }
 
-        // Загрузка и рендеринг ленты постов (включая количество лайков и комментарии)
         async function loadFeedPosts() {
             const postsContainer = document.getElementById('postsContainer');
             postsContainer.innerHTML = 'Загрузка постов...';
 
-            // Получаем посты
             const { data: posts, error: postsError } = await clientSupabase
                 .from('posts')
                 .select('*')
@@ -1170,24 +1251,20 @@
 
             postsContainer.innerHTML = '';
 
-            // Отрисовываем каждый пост по очереди
             for (const post of posts) {
                 let authorName = 'User_' + post.user_id.substring(0, 5);
                 
-                // Считаем общее количество лайков
                 const { count: likesCount } = await clientSupabase
                     .from('likes')
                     .select('*', { count: 'exact', head: true })
                     .eq('post_id', post.id);
 
-                // Получаем все комментарии к посту
                 const { data: comments } = await clientSupabase
                     .from('comments')
                     .select('*')
                     .eq('post_id', post.id)
                     .order('created_at', { ascending: true });
 
-                // Формируем блок комментариев HTML
                 let commentsHTML = '';
                 if (comments && comments.length > 0) {
                     comments.forEach(com => {
@@ -1199,7 +1276,6 @@
                     });
                 }
 
-                // Создаем карточку поста
                 const card = document.createElement('div');
                 card.className = 'post-card';
                 card.innerHTML = `
@@ -1235,7 +1311,6 @@
             }
         }
 
-        // Поставить/убрать лайк
         async function toggleLike(postId) {
             const authorId = currentUser ? currentUser.id : '00000000-0000-0000-0000-000000000000';
 
@@ -1260,7 +1335,6 @@
             document.getElementById(`like-count-${postId}`).innerText = currentLikes || 0;
         }
 
-        // Добавление комментария
         async function addComment(postId) {
             const input = document.getElementById(`com-input-${postId}`);
             const text = input.value.trim();
@@ -1288,7 +1362,9 @@
         function handleContinue() {
             if (!continueBtn.classList.contains('ready')) return;
 
-            if (currentAppState === 1) {
+            if (currentAppState === 'login') {
+                loginUserInSupabase();
+            } else if (currentAppState === 1) {
                 const emailVal = document.getElementById('email').value.trim();
                 document.getElementById('codeSentDesc').innerText = `код отправлен на email: ${emailVal}`;
                 goToStep(2);
@@ -1301,7 +1377,7 @@
 
         // Логика кнопки Назад
         function handleBack() {
-            if (currentAppState === 1) {
+            if (currentAppState === 'login' || currentAppState === 1) {
                 goToStep('welcome');
             } else if (currentAppState === 2) {
                 goToStep(1);

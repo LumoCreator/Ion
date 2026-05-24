@@ -15,42 +15,41 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            -webkit-tap-highlight-color: transparent; /* Убирает синюю рамку при нажатии на смартфонах */
+            -webkit-tap-highlight-color: transparent; /* Убирает стандартную синеву при тапе на iOS/Android */
+        }
+
+        html, body {
+            height: 100%;
+            background-color: #ffffff;
+            font-family: '42dot Sans', sans-serif;
+            overflow-x: hidden;
         }
 
         body {
-            font-family: '42dot Sans', sans-serif;
-            background-color: #ffffff;
-            height: 100vh;
-            height: -webkit-fill-available; /* Корректная высота для Safari на iOS */
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             align-items: center;
-            padding: clamp(20px, 5vh, 40px) 24px;
-            overflow: hidden;
+            padding: clamp(15px, 4vh, 40px) 24px;
             position: relative;
+            min-height: 100vh;
         }
 
-        html {
-            height: -webkit-fill-available;
-        }
-
-        /* Декоративные геометрические элементы фона */
+        /* Декоративные геометрические элементы фона — видны ВСЕГДА */
         .decor {
             position: absolute;
             background-color: #000000;
             z-index: 1;
-            transition: all 0.5s ease;
-            pointer-events: none; /* Чтобы не мешали нажимать на кнопки */
+            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+            pointer-events: none;
         }
 
         /* Верхний правый блок */
         .decor-top-right {
-            width: clamp(150px, 30vh, 250px);
-            height: clamp(150px, 30vh, 250px);
-            top: clamp(-100px, -15vh, -120px);
-            right: clamp(-60px, -10vh, -80px);
+            width: clamp(140px, 28vh, 240px);
+            height: clamp(140px, 28vh, 240px);
+            top: clamp(-90px, -12vh, -110px);
+            right: clamp(-50px, -8vh, -70px);
             transform: rotate(25deg);
             border: 4px solid #ffffff;
             outline: 2px solid #000000;
@@ -58,10 +57,10 @@
 
         /* Левый средний блок */
         .decor-left {
-            width: clamp(120px, 25vh, 200px);
-            height: clamp(120px, 25vh, 200px);
-            left: clamp(-80px, -12vh, -110px);
-            top: 40%;
+            width: clamp(110px, 22vh, 190px);
+            height: clamp(110px, 22vh, 190px);
+            left: clamp(-70px, -10vh, -100px);
+            top: 45%;
             transform: translateY(-50%) rotate(35deg);
             border: 4px solid #ffffff;
             outline: 2px solid #000000;
@@ -69,23 +68,24 @@
 
         /* Нижний правый блок */
         .decor-bottom-right {
-            width: clamp(140px, 28vh, 220px);
-            height: clamp(140px, 28vh, 220px);
-            bottom: clamp(-80px, -12vh, -100px);
-            right: clamp(-40px, -8vh, -60px);
+            width: clamp(130px, 25vh, 210px);
+            height: clamp(130px, 25vh, 210px);
+            bottom: clamp(-70px, -10vh, -90px);
+            right: clamp(-30px, -6vh, -50px);
             transform: rotate(15deg);
             background-color: transparent;
-            border: clamp(10px, 2vh, 15px) solid #000000;
+            border: clamp(8px, 1.8vh, 14px) solid #000000;
         }
 
-        /* Кнопка "Назад" */
+        /* Шапка приложения с кнопкой Назад */
         .header-section {
             width: 100%;
             max-width: 400px;
             display: flex;
             justify-content: flex-start;
             z-index: 3;
-            min-height: 48px;
+            min-height: 50px;
+            margin-bottom: 15px;
         }
 
         .btn-back {
@@ -97,15 +97,26 @@
             border: none;
             padding: 12px 28px;
             cursor: pointer;
-            transition: transform 0.1s ease, opacity 0.2s ease;
-            visibility: hidden; /* По умолчанию скрыта на главном экране */
+            outline: none;
+            border-radius: 0;
+            opacity: 0;
+            transform: translateX(-10px);
+            pointer-events: none;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+        }
+
+        /* Активное состояние кнопки назад */
+        .btn-back.visible {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: auto;
         }
 
         .btn-back:active {
-            transform: scale(0.96);
+            transform: scale(0.95);
         }
 
-        /* Контейнер для экранов */
+        /* Основной контейнер для экранов */
         .screen-container {
             width: 100%;
             max-width: 400px;
@@ -114,23 +125,25 @@
             flex-direction: column;
             justify-content: center;
             z-index: 2;
+            margin: 20px 0;
         }
 
-        /* Общий класс для экранов с анимацией появления */
+        /* Общие стили для экранов с плавной анимацией */
         .app-screen {
             display: none;
             flex-direction: column;
-            animation: fadeIn 0.4s ease forwards;
+            width: 100%;
         }
 
         .app-screen.active {
             display: flex;
+            animation: screenFadeIn 0.4s ease forwards;
         }
 
-        @keyframes fadeIn {
+        @keyframes screenFadeIn {
             from {
                 opacity: 0;
-                transform: translateY(10px);
+                transform: translateY(8px);
             }
             to {
                 opacity: 1;
@@ -138,21 +151,21 @@
             }
         }
 
-        /* ================= ЭКРАН ПРИВЕТСТВИЯ ================= */
+        /* ================= ЭКРАН ВЫБОРА (ПРИВЕТСТВИЕ) ================= */
         .welcome-brand {
             text-align: center;
-            margin-bottom: clamp(40px, 8vh, 80px);
+            margin-bottom: clamp(40px, 7vh, 75px);
         }
 
         .welcome-logo {
-            width: clamp(100px, 18vh, 140px);
+            width: clamp(110px, 16vh, 145px);
             height: auto;
             display: block;
             margin: 0 auto 15px auto;
         }
 
         .welcome-subtitle {
-            font-size: clamp(16px, 2.5vh, 18px);
+            font-size: clamp(16px, 2.3vh, 18px);
             font-weight: 300;
             color: #2c2c2c;
             letter-spacing: 0.5px;
@@ -160,64 +173,64 @@
 
         /* ================= ЭКРАНЫ РЕГИСТРАЦИИ ================= */
         .step-title {
-            font-size: clamp(18px, 2.8vh, 20px);
+            font-size: clamp(17px, 2.5vh, 19px);
             font-weight: 300;
             color: #000000;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
 
         .brand-row {
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: clamp(25px, 5vh, 45px);
+            margin-bottom: clamp(25px, 4.5vh, 40px);
         }
 
         .logo-mini {
-            height: clamp(38px, 5vh, 48px);
+            height: clamp(36px, 4.5vh, 46px);
             width: auto;
         }
 
         .brand-divider {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 300;
             color: #a0a0a0;
         }
 
         .brand-sub {
-            font-size: clamp(18px, 2.5vh, 20px);
+            font-size: clamp(17px, 2.3vh, 19px);
             font-weight: 300;
             color: #000000;
         }
 
         .info-block {
-            margin-bottom: clamp(20px, 4vh, 30px);
+            margin-bottom: clamp(20px, 3.5vh, 30px);
         }
 
         .info-title {
-            font-size: clamp(18px, 2.8vh, 20px);
+            font-size: clamp(17px, 2.5vh, 19px);
             font-weight: 300;
             color: #000000;
             margin-bottom: 4px;
         }
 
         .info-desc {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 300;
             color: #a0a0a0;
         }
 
-        /* Поля ввода и группы */
+        /* Поля ввода */
         .input-group {
             position: relative;
             width: 100%;
-            margin-bottom: clamp(14px, 2.5vh, 22px);
+            margin-bottom: clamp(12px, 2.2vh, 20px);
         }
 
         .input-field {
             font-family: '42dot Sans', sans-serif;
             width: 100%;
-            font-size: clamp(16px, 2.3vh, 18px);
+            font-size: clamp(15px, 2.2vh, 17px);
             font-weight: 300;
             padding: 10px 40px 10px 0;
             border: none;
@@ -238,7 +251,7 @@
             font-weight: 300;
         }
 
-        /* Иконка чекбокса подтверждения заполнения полей */
+        /* Индикатор-галочка заполненности полей */
         .status-icon {
             position: absolute;
             right: 4px;
@@ -251,7 +264,7 @@
             align-items: center;
             justify-content: center;
             opacity: 0;
-            transform: scale(0.8);
+            transform: scale(0.7);
             transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
@@ -266,7 +279,7 @@
             display: none;
         }
 
-        /* Показываем иконку при валидности класса */
+        /* Переключение состояния индикатора */
         .input-group.field-valid .status-icon {
             opacity: 1;
             transform: scale(1);
@@ -277,7 +290,7 @@
             display: block;
         }
 
-        /* Требования к паролю (Шаг 2) */
+        /* Валидация пароля (Шаг 2) */
         .password-requirements {
             list-style: none;
             margin-top: 15px;
@@ -290,10 +303,9 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 300;
             color: #000000;
-            transition: opacity 0.2s ease;
         }
 
         .req-box {
@@ -327,22 +339,22 @@
             display: block;
         }
 
-        /* Поле ввода кода (Шаг 3) */
+        /* Код подтверждения (Шаг 3) */
         .code-group {
             display: flex;
             justify-content: space-between;
             gap: 12px;
-            margin-top: 20px;
+            margin-top: 15px;
         }
 
         .code-input {
             font-family: '42dot Sans', sans-serif;
             flex: 1;
-            max-width: 70px;
+            max-width: 65px;
             aspect-ratio: 1 / 1;
             border: 1px solid #000000;
             text-align: center;
-            font-size: clamp(20px, 3.5vh, 26px);
+            font-size: clamp(18px, 3vh, 24px);
             font-weight: 400;
             outline: none;
             background: transparent;
@@ -352,15 +364,15 @@
 
         .code-input:focus {
             border-width: 2px;
-            background-color: #fafafa;
+            background-color: #fcfcfc;
         }
 
-        /* ================= КНОПКИ И ФУТЕР ================= */
+        /* ================= СТИЛИ КНОПОК ================= */
         .button-group {
             width: 100%;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 14px;
         }
 
         .btn {
@@ -368,21 +380,21 @@
             font-size: 16px;
             font-weight: 400;
             width: 100%;
-            padding: clamp(14px, 2.2vh, 18px);
+            padding: clamp(14px, 2vh, 18px);
             border: 1px solid #000000;
             cursor: pointer;
-            transition: transform 0.1s ease, background-color 0.3s ease, color 0.3s ease;
+            transition: transform 0.1s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.3s ease, color 0.3s ease;
             text-align: center;
             text-decoration: none;
             outline: none;
             border-radius: 0;
         }
 
+        /* Тактильная микро-анимация сжатия при клике на любую кнопку */
         .btn:active {
-            transform: scale(0.98);
+            transform: scale(0.97);
         }
 
-        /* Стили кнопок приветствия */
         .btn-login {
             background: linear-gradient(180deg, #1c1c1c 0%, #0d0d0d 100%);
             color: #ffffff;
@@ -394,27 +406,27 @@
             color: #000000;
         }
 
-        /* Стили кнопки продолжения регистрации */
         .btn-continue {
             background-color: #666666;
             color: #ffffff;
             border: none;
+            display: none; /* Включается только внутри регистрации */
         }
 
         .btn-continue.ready {
             background-color: #000000;
-            cursor: pointer;
         }
 
-        /* Футер */
+        /* Нижний блок */
         .footer-section {
             width: 100%;
             max-width: 400px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: clamp(20px, 4vh, 40px);
+            gap: clamp(15px, 3vh, 35px);
             z-index: 3;
+            margin-top: 15px;
         }
 
         .version {
@@ -531,28 +543,27 @@
     </div>
 
     <div class="footer-section">
-        <button class="btn btn-continue" id="continueBtn" style="display: none;" onclick="handleContinue()">Продолжить</button>
+        <button class="btn btn-continue" id="continueBtn" onclick="handleContinue()">Продолжить</button>
         <div class="version">demo version - 1.0</div>
     </div>
 
     <script>
-        // Состояние приложения: 'welcome', 1, 2, 3
         let currentAppState = 'welcome'; 
         
         const continueBtn = document.getElementById('continueBtn');
         const backBtn = document.getElementById('backBtn');
         let codeValues = ["", "", "", ""];
 
-        // Очистка никнейма от любых символов кроме английских, цифр и _
+        // Фильтр никнейма: только латиница, цифры и нижнее подчеркивание
         function cleanNicknameInput() {
             const nicknameField = document.getElementById('nickname');
             nicknameField.value = nicknameField.value.replace(/[^a-zA-Z0-9_]/g, '');
         }
 
-        // Автоматическое форматирование даты ДД.ММ.ГГГГ и запрет букв
+        // Автоподстановка точек в дату и запрет букв
         function formatBirthdateInput() {
             const dateField = document.getElementById('birthdate');
-            let val = dateField.value.replace(/\D/g, ''); // Удаляем всё кроме цифр
+            let val = dateField.value.replace(/\D/g, ''); 
             
             if (val.length > 2 && val.length <= 4) {
                 val = val.slice(0, 2) + '.' + val.slice(2);
@@ -562,7 +573,7 @@
             dateField.value = val;
         }
 
-        // Валидация Первого Шага
+        // Валидация Шага 1
         function validateStep1() {
             const email = document.getElementById('email').value.trim();
             const firstname = document.getElementById('firstname').value.trim();
@@ -570,17 +581,15 @@
             const nickname = document.getElementById('nickname').value.trim();
             const birthdate = document.getElementById('birthdate').value.trim();
 
-            // Показываем галочки заполненности индивидуально
             document.getElementById('group_email').classList.toggle('field-valid', email !== "");
             document.getElementById('group_firstname').classList.toggle('field-valid', firstname !== "");
             document.getElementById('group_lastname').classList.toggle('field-valid', lastname !== "");
             document.getElementById('group_nickname').classList.toggle('field-valid', nickname !== "");
             
-            // Галочка даты появляется СТРОГО при полной длине строки "ДД.ММ.ГГГГ" (10 символов)
+            // Чекбокс появляется строго при 10 символах (ДД.ММ.ГГГГ)
             const isBirthdateComplete = (birthdate.length === 10);
             document.getElementById('group_birthdate').classList.toggle('field-valid', isBirthdateComplete);
 
-            // Кнопка активна, если обязательные поля не пустые, и дата введена полностью
             if (email !== "" && firstname !== "" && nickname !== "" && isBirthdateComplete) {
                 continueBtn.classList.add('ready');
                 return true;
@@ -590,7 +599,7 @@
             }
         }
 
-        // Валидация Второго Шага
+        // Валидация Шага 2
         function validateStep2() {
             const pass = document.getElementById('password').value;
             const confirm = document.getElementById('password_confirm').value;
@@ -613,7 +622,7 @@
             }
         }
 
-        // Фокусировка на ячейках кода (Шаг 3)
+        // Фокусировка кода из СМС/Email
         function moveCodeFocus(input, index) {
             codeValues[index] = input.value;
             if (input.value.length === 1 && index < 3) {
@@ -639,15 +648,13 @@
             }
         }
 
-        // Навигация и переключение экранов приложения
+        // Переключение экранов и изменение углов наклона декораций
         function goToStep(target) {
-            // Скрываем все экраны
             document.getElementById('screenWelcome').classList.remove('active');
             document.getElementById('screenStep1').classList.remove('active');
             document.getElementById('screenStep2').classList.remove('active');
             document.getElementById('screenStep3').classList.remove('active');
 
-            // Смена декоративных углов для динамики при переключении экранов
             const topDecor = document.querySelector('.decor-top-right');
             const leftDecor = document.querySelector('.decor-left');
 
@@ -655,21 +662,22 @@
 
             if (target === 'welcome') {
                 document.getElementById('screenWelcome').classList.add('active');
-                backBtn.style.visibility = 'hidden';
+                backBtn.classList.remove('visible');
                 continueBtn.style.display = 'none';
                 
+                // Стандартное вращение на первом экране
                 topDecor.style.transform = 'rotate(25deg)';
                 leftDecor.style.transform = 'translateY(-50%) rotate(35deg)';
             } else {
-                backBtn.style.visibility = 'visible';
+                backBtn.classList.add('visible');
                 continueBtn.style.display = 'block';
                 continueBtn.classList.remove('ready');
 
                 if (target === 1) {
                     document.getElementById('screenStep1').classList.add('active');
                     validateStep1();
-                    topDecor.style.transform = 'rotate(45deg) scale(0.9)';
-                    leftDecor.style.transform = 'translateY(-50%) rotate(15deg) scale(0.9)';
+                    topDecor.style.transform = 'rotate(45deg) scale(0.95)';
+                    leftDecor.style.transform = 'translateY(-50%) rotate(15deg) scale(0.95)';
                 } else if (target === 2) {
                     document.getElementById('screenStep2').classList.add('active');
                     validateStep2();
@@ -684,7 +692,6 @@
             }
         }
 
-        // Нажатие на кнопку "Продолжить"
         function handleContinue() {
             if (!continueBtn.classList.contains('ready')) return;
 
@@ -699,7 +706,6 @@
             }
         }
 
-        // Нажатие на кнопку "Назад"
         function handleBack() {
             if (currentAppState === 1) {
                 goToStep('welcome');

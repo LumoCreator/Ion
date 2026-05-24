@@ -7,7 +7,7 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=42dot+Sans:wght@300;400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=42dot+Sans:wght=300;400&display=swap" rel="stylesheet">
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -42,8 +42,7 @@
             position: absolute;
             background-color: #000000;
             z-index: 1;
-            /* transform задается динамически через JS, убираем жесткий transition для плавности мыши */
-            transition: transform 0.1s ease-out;
+            transition: transform 0.15s ease-out;
             pointer-events: none;
         }
 
@@ -558,7 +557,7 @@
             height: 65px;
             background-color: #ffffff;
             border-top: 1px solid #e0e0e0;
-            display: none; /* Включается только на экране ленты */
+            display: none; 
             justify-content: space-around;
             align-items: center;
             z-index: 10;
@@ -805,7 +804,8 @@
         const SUPABASE_URL = 'https://rnqdaqbvriztmfxwcxri.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJucWRhcWJ2cml6dG1meHdjeHJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2MjcwMjEsImV4cCI6MjA5NTIwMzAyMX0.S3JwkpGYsjMLoT2bBZxrDq4B8mEPnZY9FLTelaqqh3s';
         
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Исправлено: прямая инициализация из глобального объекта библиотеки
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let currentAppState = 'welcome'; 
         let currentUser = null; 
@@ -820,6 +820,10 @@
             feed: { top: 15, left: -15 },
             publish: { top: -20, left: 40 }
         };
+
+        // Последние сохраненные координаты мыши для плавного рендеринга
+        let lastMouseX = 0;
+        let lastMouseY = 0;
 
         // Элементы интерфейса
         const continueBtn = document.getElementById('continueBtn');
@@ -874,8 +878,8 @@
                 document.getElementById('screenPublish').classList.add('active');
             }
 
-            // Принудительно вызываем обновление положения квадратов под новый экран
-            updateDecorPositions(0, 0);
+            // Принудительно обновляем положение квадратов под новый экран
+            updateDecorPositions(lastMouseX, lastMouseY);
         }
 
         // ================= ИНТЕРАКТИВНЫЙ ПАРАЛЛАКС ФОНА И КВАДРАТОВ =================
@@ -884,7 +888,7 @@
             const leftDecor = document.getElementById('decorLeft');
             const bottomDecor = document.getElementById('decorBottomRight');
 
-            // Получаем базовые углы для текущего состояния экрана
+            // Находим ключ для текущего состояния экрана
             let stateKey = (typeof currentAppState === 'number') ? 'step' + currentAppState : currentAppState;
             let currentAngles = baseAngles[stateKey] || { top: 0, left: 0 };
 
@@ -896,7 +900,7 @@
             let moveBottomX = mouseX * 15;
             let moveBottomY = mouseY * 15;
 
-            // Применяем трансформации
+            // Применяем трансформации, бережно соединяя поворот и сдвиг
             if (topDecor) {
                 topDecor.style.transform = `translate(${moveTopX}px, ${moveTopY}px) rotate(${currentAngles.top}deg)`;
             }
@@ -910,10 +914,10 @@
 
         // Слушатель движения мыши по всему экрану
         document.addEventListener('mousemove', (e) => {
-            // Высчитываем нормализованные координаты от -1 до 1
-            let x = (e.clientX / window.innerWidth) - 0.5;
-            let y = (e.clientY / window.innerHeight) - 0.5;
-            updateDecorPositions(x, y);
+            // Высчитываем нормализованные координаты от -0.5 до 0.5
+            lastMouseX = (e.clientX / window.innerWidth) - 0.5;
+            lastMouseY = (e.clientY / window.innerHeight) - 0.5;
+            updateDecorPositions(lastMouseX, lastMouseY);
         });
 
         // Фильтрация ввода никнейма (только a-z, A-Z, 0-9 и _)
@@ -1097,7 +1101,6 @@
                 return;
             }
 
-            // Если пользователь еще не зарегистрирован/не вошел (для теста), используем фиксированный UUID
             const authorId = currentUser ? currentUser.id : '00000000-0000-0000-0000-000000000000';
 
             // 1. Если есть прикрепленный файл, загружаем его в бакет 'post-images'
@@ -1135,12 +1138,10 @@
             if (postError) {
                 alert('Ошибка публикации поста: ' + postError.message);
             } else {
-                // Очищаем форму публикации
                 document.getElementById('postText').value = '';
                 fileInput.value = '';
                 document.getElementById('filePreview').style.display = 'none';
                 
-                // Возвращаемся в ленту и обновляем посты
                 goToStep('feed');
             }
         }
@@ -1237,7 +1238,6 @@
         async function toggleLike(postId) {
             const authorId = currentUser ? currentUser.id : '00000000-0000-0000-0000-000000000000';
 
-            // Проверяем, стоит ли уже лайк
             const { data: existingLike } = await supabase
                 .from('likes')
                 .select('*')
@@ -1246,14 +1246,11 @@
                 .single();
 
             if (existingLike) {
-                // Если стоит — убираем
                 await supabase.from('likes').delete().eq('id', existingLike.id);
             } else {
-                // Если нет — добавляем
                 await supabase.from('likes').insert({ post_id: postId, user_id: authorId });
             }
             
-            // Быстро обновляем число лайков на экране
             const { count: currentLikes } = await supabase
                 .from('likes')
                 .select('*', { count: 'exact', head: true })
@@ -1282,7 +1279,6 @@
                 alert('Ошибка комментария: ' + error.message);
             } else {
                 input.value = '';
-                // Перерисовываем список постов, чтобы увидеть коммент
                 loadFeedPosts();
             }
         }

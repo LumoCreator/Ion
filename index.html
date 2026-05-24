@@ -923,7 +923,6 @@
             let stateKey = (typeof currentAppState === 'number') ? 'step' + currentAppState : currentAppState;
             let currentAngles = baseAngles[stateKey] || { top: 0, left: 0 };
 
-            // Интенсивность смещения за мышью
             let moveTopX = mouseX * 30;
             let moveTopY = mouseY * 30;
             let moveLeftX = mouseX * -40;
@@ -931,7 +930,6 @@
             let moveBottomX = mouseX * 20;
             let moveBottomY = mouseY * 20;
 
-            // Применяем стили: сохраняем базовый наклон через rotate() и добавляем сдвиг мыши
             if (topDecor) {
                 topDecor.style.transform = `translate(${moveTopX}px, ${moveTopY}px) rotate(${currentAngles.top}deg)`;
             }
@@ -1119,32 +1117,24 @@
             continueBtn.innerText = 'Создание...';
             continueBtn.classList.remove('ready');
 
-            // Создание аккаунта в системе аутентификации Supabase
+            // Создание аккаунта
             const { data, error } = await clientSupabase.auth.signUp({
                 email: email,
-                password: password,
-                options: {
-                    data: {
-                        firstname: firstname,
-                        lastname: lastname,
-                        nickname: nickname,
-                        birthdate: birthdate
-                    }
-                }
+                password: password
             });
 
             if (error) {
                 alert('Ошибка регистрации: ' + error.message);
-                console.error(error);
                 continueBtn.innerText = 'Продолжить';
                 continueBtn.classList.add('ready');
                 return;
             }
 
+            // После отключения "Confirm email", data.user вернется сразу в готовом активном состоянии
             if (data.user) {
                 currentUser = data.user;
                 
-                // Пробуем записать данные в таблицу profiles
+                // Напрямую добавляем информацию в profiles
                 const { error: profileError } = await clientSupabase
                     .from('profiles')
                     .insert([
@@ -1158,19 +1148,19 @@
                     ]);
 
                 if (profileError) {
-                    console.warn('Профиль не записался (возможно сработал триггер):', profileError.message);
+                    console.warn('Ошибка сохранения профиля в таблицу:', profileError.message);
                 }
                 
-                alert('Аккаунт создан! Переходим к подтверждению.');
-                goToStep(3);
+                alert('Аккаунт успешно создан и активирован!');
+                goToStep('feed'); // Переходим сразу на главный экран с постами
             } else {
-                alert('Ошибка: Не удалось получить сессию пользователя.');
+                alert('Ошибка: сервер не вернул сессию пользователя.');
             }
             
             continueBtn.innerText = 'Продолжить';
         }
 
-        // Подтверждение OTP / Email-кода на Шаге 3
+        // Подтверждение OTP / Email-кода на Шаге 3 (Остается как резервный метод)
         async function verifyEmailCode() {
             alert('Регистрация успешно подтверждена!');
             goToStep('feed');

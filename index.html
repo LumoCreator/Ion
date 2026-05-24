@@ -76,12 +76,13 @@
             transform: rotate(15deg);
         }
 
-        /* Шапка приложения с кнопкой Назад */
+        /* Шапка приложения с кнопкой Назад и Кнопкой Выхода */
         .header-section {
             width: 100%;
             max-width: 400px;
             display: flex;
-            justify-content: flex-start;
+            justify-content: space-between;
+            align-items: center;
             z-index: 3;
             min-height: 40px;
             flex-shrink: 0;
@@ -112,6 +113,27 @@
 
         .btn-back:active {
             transform: scale(0.95);
+        }
+
+        .btn-logout {
+            font-family: '42dot Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 400;
+            color: #000000;
+            background-color: transparent;
+            border: 1px solid #000000;
+            padding: 6px 14px;
+            cursor: pointer;
+            outline: none;
+            border-radius: 0;
+            display: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn-logout:active {
+            transform: scale(0.95);
+            background-color: #000000;
+            color: #ffffff;
         }
 
         /* Главный стабильный контейнер с адаптивной высотой */
@@ -570,22 +592,52 @@
             background: none;
             border: none;
             cursor: pointer;
-            width: 40px;
-            height: 40px;
+            width: 44px;
+            height: 44px;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: opacity 0.2s ease;
+        }
+
+        .tab-btn:active {
+            opacity: 0.5;
+        }
+
+        .tab-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: none;
+            stroke: #000000;
+            stroke-width: 1.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .tab-btn.tab-active svg {
+            stroke-width: 2.5;
         }
 
         .tab-btn-center {
-            width: 50px;
-            height: 50px;
-            background-color: #1a1a1a;
+            width: 48px;
+            height: 48px;
+            background-color: #000000;
             border-radius: 50%;
-            color: #ffffff;
-            font-size: 24px;
-            line-height: 50px;
-            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.1s ease;
+        }
+
+        .tab-btn-center:active {
+            transform: scale(0.92);
+        }
+
+        .tab-btn-center svg {
+            width: 20px;
+            height: 20px;
+            stroke: #ffffff;
+            stroke-width: 2;
         }
 
         /* ================= КНОПКИ И УПРАВЛЕНИЕ ================= */
@@ -666,6 +718,7 @@
 
     <div class="header-section">
         <button class="btn-back" id="backBtn" onclick="handleBack()">назад</button>
+        <button class="btn-logout" id="logoutBtn" onclick="logoutUserInSupabase()">выход</button>
     </div>
 
     <div class="screen-container">
@@ -815,9 +868,24 @@
     </div>
 
     <div class="nav-tab-bar" id="appTabBar">
-        <button class="tab-btn" onclick="goToStep('feed')">🏠</button>
-        <button class="tab-btn tab-btn-center" onclick="goToStep('publish')">+</button>
-        <button class="tab-btn" onclick="alert('Профиль в разработке')">👤</button>
+        <button class="tab-btn id-btn-feed" onclick="goToStep('feed')">
+            <svg viewBox="0 0 24 24">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+        </button>
+        <button class="tab-btn tab-btn-center" onclick="goToStep('publish')">
+            <svg viewBox="0 0 24 24">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+        </button>
+        <button class="tab-btn id-btn-profile" onclick="alert('Профиль в разработке')">
+            <svg viewBox="0 0 24 24">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+        </button>
     </div>
 
     <div class="footer-section">
@@ -854,7 +922,27 @@
         // Элементы интерфейса
         const continueBtn = document.getElementById('continueBtn');
         const backBtn = document.getElementById('backBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
         const appTabBar = document.getElementById('appTabBar');
+
+        // ================= СИСТЕМА СОХРАНЕНИЯ СЕССИИ (АВТО-ВХОД) =================
+        async function checkActiveUserSession() {
+            const { data: { session }, error } = await clientSupabase.auth.getSession();
+            if (session && session.user) {
+                currentUser = session.user;
+                goToStep('feed');
+            }
+        }
+
+        // Подписка на изменение состояния авторизации
+        clientSupabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN' && session) {
+                currentUser = session.user;
+            } else if (event === 'SIGNED_OUT') {
+                currentUser = null;
+                goToStep('welcome');
+            }
+        });
 
         // ================= СИСТЕМА ПЕРЕКЛЮЧЕНИЯ ЭКРАНОВ =================
         function goToStep(target) {
@@ -866,16 +954,23 @@
             document.getElementById('screenFeed').classList.remove('active');
             document.getElementById('screenPublish').classList.remove('active');
 
+            // Сброс подсветки активных табов
+            document.querySelector('.id-btn-feed').classList.remove('tab-active');
+            document.querySelector('.id-btn-profile').classList.remove('tab-active');
+
             currentAppState = target;
             document.querySelector('.screen-container').scrollTop = 0;
 
-            // Контроль видимости таб-бара и кнопки "Назад"
+            // Контроль видимости таб-бара, кнопки Назад и Выход
             if (target === 'feed' || target === 'publish') {
                 appTabBar.style.display = 'flex';
                 backBtn.classList.remove('visible');
+                logoutBtn.style.display = 'block'; 
                 continueBtn.style.display = 'none';
+                if(target === 'feed') document.querySelector('.id-btn-feed').classList.add('tab-active');
             } else {
                 appTabBar.style.display = 'none';
+                logoutBtn.style.display = 'none';
             }
 
             // Управление состояниями экранов
@@ -1105,6 +1200,17 @@
             continueBtn.innerText = 'Продолжить';
         }
 
+        // ================= БЭКЕНД: ВЫХОД ИЗ АККАУНТА =================
+        async function logoutUserInSupabase() {
+            const { error } = await clientSupabase.auth.signOut();
+            if (error) {
+                alert('Ошибка выхода из аккаунта: ' + error.message);
+            } else {
+                currentUser = null;
+                goToStep('welcome');
+            }
+        }
+
         // ================= БЭКЕНД: РЕГИСТРАЦИЯ ПОЛЬЗОВАТЕЛЯ =================
         async function registerUserInSupabase() {
             const email = document.getElementById('email').value.trim();
@@ -1130,7 +1236,6 @@
                 return;
             }
 
-            // После отключения "Confirm email", data.user вернется сразу в готовом активном состоянии
             if (data.user) {
                 currentUser = data.user;
                 
@@ -1152,7 +1257,7 @@
                 }
                 
                 alert('Аккаунт успешно создан и активирован!');
-                goToStep('feed'); // Переходим сразу на главный экран с постами
+                goToStep('feed'); 
             } else {
                 alert('Ошибка: сервер не вернул сессию пользователя.');
             }
@@ -1167,7 +1272,6 @@
         }
 
         // ================= БЭКЕНД: ЛЕНТА И ПУБЛИКАЦИЯ ПОСТОВ =================
-        
         async function publishPost() {
             const textContent = document.getElementById('postText').value.trim();
             const fileInput = document.getElementById('postFileInput');
@@ -1376,9 +1480,10 @@
             }
         }
 
-        // Инициализируем изначальные позиции квадратов при загрузке страницы
+        // Запуск проверки сессии при загрузке страницы
         window.onload = function() {
             updateDecorPositions(0, 0);
+            checkActiveUserSession();
         };
     </script>
 </body>

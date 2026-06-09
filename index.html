@@ -2,1519 +2,1307 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ion — Социальная сеть</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Ion Messenger</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=42dot+Sans:wght=300;400&display=swap" rel="stylesheet">
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
     <style>
-        /* Общие настройки и сброс стилей */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            -webkit-tap-highlight-color: transparent;
+        :root {
+            --md-primary: #0b57d0; 
+            --md-on-primary: #ffffff;
+            --md-primary-container: #d3e3fd; 
+            --md-on-primary-container: #041e49;
+            --md-surface: #fbfdf8; 
+            --md-on-surface: #191c1b;
+            --md-surface-variant: #e1e3e0; 
+            --md-on-surface-variant: #424744;
+            --md-outline: #727974; 
+            --md-secondary-container: #cce8e0;
+            --md-error: #ba1a1a;
+            --md-error-container: #ffdad6;
+            --md-bg-chat: #f0f4f9;
+            --dur-long: 400ms; 
         }
 
-        html, body {
-            height: 100%;
-            background-color: #ffffff;
-            font-family: '42dot Sans', sans-serif;
-            overflow: hidden;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; user-select: none; }
+        body { background-color: var(--md-surface); color: var(--md-on-surface); overflow: hidden; height: 100dvh; width: 100vw; position: fixed; top: 0; left: 0; }
 
-        body {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
-            padding: clamp(10px, 2vh, 25px) 24px clamp(15px, 3vh, 35px) 24px;
-            position: relative;
-            min-height: 100vh;
+        .screen { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100dvh; 
+            display: flex; flex-direction: column; opacity: 0; transform: translateX(30px) scale(0.98); 
+            pointer-events: none; transition: opacity var(--dur-long), transform var(--dur-long); 
+            background-color: var(--md-surface); z-index: 1; overflow: hidden;
+            padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
         }
+        .screen.active { opacity: 1; transform: translateX(0) scale(1); pointer-events: auto; z-index: 2; }
 
-        /* Декоративные геометрические элементы фона */
-        .decor {
-            position: absolute;
-            background-color: #000000;
-            z-index: 1;
-            transition: transform 0.15s ease-out;
-            pointer-events: none;
-        }
+        .sub-view { display: none; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; height: 100%; }
+        .sub-view.active { display: flex; }
 
-        .decor-top-right {
-            width: clamp(120px, 24vh, 220px);
-            height: clamp(120px, 24vh, 220px);
-            top: clamp(-80px, -10vh, -100px);
-            right: clamp(-45px, -7vh, -65px);
-            border: 4px solid #ffffff;
-            outline: 2px solid #000000;
-            transform: rotate(25deg);
-        }
-
-        .decor-left {
-            width: clamp(100px, 20vh, 170px);
-            height: clamp(100px, 20vh, 170px);
-            left: clamp(-60px, -8vh, -90px);
-            top: 45%;
-            border: 4px solid #ffffff;
-            outline: 2px solid #000000;
-            transform: translateY(-50%) rotate(35deg);
-        }
-
-        .decor-bottom-right {
-            width: clamp(110px, 22vh, 190px);
-            height: clamp(110px, 22vh, 190px);
-            bottom: clamp(-60px, -8vh, -80px);
-            right: clamp(-25px, -5vh, -45px);
-            background-color: transparent;
-            border: clamp(6px, 1.5vh, 12px) solid #000000;
-            transform: rotate(15deg);
-        }
-
-        /* Шапка приложения с кнопкой Назад и Кнопкой Выхода */
-        .header-section {
-            width: 100%;
-            max-width: 400px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 3;
-            min-height: 40px;
-            flex-shrink: 0;
-        }
-
-        .btn-back {
-            font-family: '42dot Sans', sans-serif;
-            font-size: 16px;
-            font-weight: 400;
-            color: #ffffff;
-            background-color: #000000;
-            border: none;
-            padding: 10px 26px;
-            cursor: pointer;
-            outline: none;
-            border-radius: 0;
-            opacity: 0;
-            transform: translateX(-10px);
-            pointer-events: none;
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
-        }
-
-        .btn-back.visible {
-            opacity: 1;
-            transform: translateX(0);
-            pointer-events: auto;
-        }
-
-        .btn-back:active {
-            transform: scale(0.95);
-        }
-
-        .btn-logout {
-            font-family: '42dot Sans', sans-serif;
-            font-size: 14px;
-            font-weight: 400;
-            color: #000000;
-            background-color: transparent;
-            border: 1px solid #000000;
-            padding: 6px 14px;
-            cursor: pointer;
-            outline: none;
-            border-radius: 0;
-            display: none;
-            transition: all 0.2s ease;
-        }
-
-        .btn-logout:active {
-            transform: scale(0.95);
-            background-color: #000000;
-            color: #ffffff;
-        }
-
-        /* Главный стабильный контейнер с адаптивной высотой */
-        .screen-container {
-            width: 100%;
-            max-width: 400px;
-            flex: 1;
-            position: relative;
-            z-index: 2;
-            margin: clamp(10px, 2vh, 25px) 0;
-            overflow-y: auto;
-            scrollbar-width: none;
-            height: 100%;
-        }
-
-        .screen-container::-webkit-scrollbar {
-            display: none;
-        }
-
-        /* Общие правила для экранов */
-        .app-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-            transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
-            transform: translateY(8px);
-        }
-
-        .app-screen.active {
-            opacity: 1;
-            visibility: visible;
-            pointer-events: auto;
-            transform: translateY(0);
-        }
-
-        /* ================= ЭКРАН ВЫБОРА (ПРИВЕТСТВИЕ) ================= */
-        .welcome-wrapper {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            height: 100%;
-            width: 100%;
-        }
-
-        .welcome-brand {
-            text-align: center;
-            margin-bottom: clamp(30px, 5vh, 55px);
-        }
-
-        .welcome-logo {
-            width: clamp(110px, 15vh, 140px);
-            height: auto;
-            display: block;
-            margin: 0 auto 15px auto;
-        }
-
-        .welcome-subtitle {
-            font-size: clamp(15px, 2vh, 17px);
-            font-weight: 300;
-            color: #2c2c2c;
-            letter-spacing: 0.5px;
-        }
-
-        /* ================= ШАПКА ДЛЯ ШАГОВ РЕГИСТРАЦИИ И АВТОРИЗАЦИИ ================= */
-        .step-title {
-            font-size: clamp(16px, 2.2vh, 18px);
-            font-weight: 300;
-            color: #000000;
-            margin-bottom: 8px;
-        }
-
-        .brand-row {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: clamp(15px, 3vh, 25px);
-        }
-
-        .logo-mini {
-            height: clamp(34px, 4vh, 42px);
-            width: auto;
-        }
-
-        .brand-divider {
-            font-size: 20px;
-            font-weight: 300;
-            color: #a0a0a0;
-        }
-
-        .brand-sub {
-            font-size: clamp(16px, 2.2vh, 18px);
-            font-weight: 300;
-            color: #000000;
-        }
-
-        .info-block {
-            margin-bottom: clamp(12px, 2.5vh, 22px);
-        }
-
-        .info-title {
-            font-size: clamp(16px, 2.2vh, 18px);
-            font-weight: 300;
-            color: #000000;
-            margin-bottom: 2px;
-        }
-
-        .info-desc {
-            font-size: 13px;
-            font-weight: 300;
-            color: #a0a0a0;
-        }
-
-        /* Поля ввода и группы ввода */
-        .input-group {
-            position: relative;
-            width: 100%;
-            margin-bottom: clamp(10px, 1.8vh, 16px);
-        }
-
-        .input-field {
-            font-family: '42dot Sans', sans-serif;
-            width: 100%;
-            font-size: clamp(15px, 2vh, 17px);
-            font-weight: 300;
-            padding: clamp(6px, 1.2vh, 10px) 40px clamp(6px, 1.2vh, 10px) 0;
-            border: none;
-            border-bottom: 1px solid #000000;
-            background: transparent;
-            outline: none;
-            color: #000000;
-            border-radius: 0;
-            transition: border-color 0.2s ease;
-        }
-
-        .input-field:focus {
-            border-bottom-width: 2px;
-        }
-
-        .input-field::placeholder {
-            color: #a0a0a0;
-            font-weight: 300;
-        }
-
-        /* Квадратные индикаторы чекбоксов */
-        .status-icon {
-            position: absolute;
-            right: 4px;
-            bottom: clamp(8px, 1.4vh, 12px);
-            width: 18px;
-            height: 18px;
-            border: 1px solid #000000;
-            background-color: transparent;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transform: scale(0.7);
-            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        .status-icon::after {
-            content: '';
-            width: 4px;
-            height: 8px;
-            border: solid #ffffff;
-            border-width: 0 2px 2px 0;
-            transform: rotate(45deg);
-            margin-bottom: 2px;
-            display: none;
-        }
-
-        .input-group.field-valid .status-icon {
-            opacity: 1;
-            transform: scale(1);
-            background-color: #000000;
-        }
-
-        .input-group.field-valid .status-icon::after {
-            display: block;
-        }
-
-        /* Требования к паролям (Шаг 2) */
-        .password-requirements {
-            list-style: none;
-            margin-top: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .req-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 15px;
-            font-weight: 300;
-            color: #000000;
-        }
-
-        .req-box {
-            width: 18px;
-            height: 18px;
-            border: 1px solid #000000;
-            background-color: transparent;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        .req-box::after {
-            content: '';
-            width: 4px;
-            height: 8px;
-            border: solid #ffffff;
-            border-width: 0 2px 2px 0;
-            transform: rotate(45deg);
-            margin-bottom: 2px;
-            display: none;
-        }
-
-        .req-item.valid .req-box {
-            background-color: #000000;
-        }
-
-        .req-item.valid .req-box::after {
-            display: block;
-        }
-
-        /* Ячейки подтверждения кода (Шаг 3) */
-        .code-group {
-            display: flex;
-            justify-content: space-between;
-            gap: 12px;
-            margin-top: 15px;
-        }
-
-        .code-input {
-            font-family: '42dot Sans', sans-serif;
-            flex: 1;
-            max-width: 65px;
-            aspect-ratio: 1 / 1;
-            border: 1px solid #000000;
-            text-align: center;
-            font-size: 22px;
-            font-weight: 400;
-            outline: none;
-            background: transparent;
-            border-radius: 0;
-            transition: all 0.2s ease;
-        }
-
-        .code-input:focus {
-            border-width: 2px;
-            background-color: #fcfcfc;
-        }
-
-        /* ================= ЭКРАН ЛЕНТЫ ПОСТОВ ================= */
-        .feed-header {
-            border-bottom: 1px solid #000000;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
+        .m3-top-bar { height: 64px; min-height: 64px; background: rgba(251, 253, 248, 0.95); backdrop-filter: blur(16px); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; z-index: 10; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .m3-top-bar h2 { font-size: 22px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+        .m3-icon-btn { width: 44px; height: 44px; border-radius: 50%; border: none; background: transparent; color: var(--md-on-surface-variant); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .m3-icon-btn:active { transform: scale(0.85); background-color: var(--md-surface-variant); }
         
-        .feed-header h1 {
-            font-size: 28px;
-            font-weight: 300;
+        .m3-btn { height: 48px; padding: 0 24px; border-radius: 24px; border: none; font-weight: 600; font-size: 15px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
+        .m3-btn-filled { background-color: var(--md-primary); color: var(--md-on-primary); }
+        .m3-btn-tonal { background-color: var(--md-primary-container); color: var(--md-on-primary-container); }
+        .m3-btn-error { background-color: var(--md-error-container); color: var(--md-error); }
+        
+        .m3-fab { position: absolute; bottom: 100px; right: 20px; height: 56px; padding: 0 20px; border-radius: 16px; background-color: var(--md-primary-container); color: var(--md-on-primary-container); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 10; }
+
+        .m3-navigation-bar { height: 80px; min-height: 80px; background-color: #f3f4f8; display: flex; justify-content: space-around; align-items: center; padding-bottom: 4px; width: 100%; }
+        .m3-nav-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; flex: 1; gap: 4px; color: var(--md-on-surface-variant); }
+        .m3-nav-icon-wrapper { height: 32px; width: 64px; border-radius: 16px; display: flex; align-items: center; justify-content: center; }
+        .m3-nav-item.active { color: var(--md-on-surface); font-weight: 600; }
+        .m3-nav-item.active .m3-nav-icon-wrapper { background-color: var(--md-secondary-container); }
+
+        .auth-card { background: white; padding: 40px 32px; border-radius: 32px; width: 90%; max-width: 400px; margin: auto; text-align: center; box-shadow: 0 12px 48px rgba(0,0,0,0.05); }
+        .m3-input-group input { width: 100%; height: 56px; background-color: var(--md-surface-variant); border: none; border-radius: 16px 16px 4px 4px; border-bottom: 2px solid var(--md-outline); padding: 0 16px; font-size: 16px; margin-bottom: 16px; outline: none; }
+
+        .status-bar { display: flex; overflow-x: auto; padding: 12px 16px; gap: 16px; border-bottom: 1px solid var(--md-surface-variant); scrollbar-width: none; }
+        .status-bar::-webkit-scrollbar { display: none; }
+        .status-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; width: 64px; flex-shrink: 0; }
+        .status-avatar-wrapper { width: 60px; height: 60px; border-radius: 50%; padding: 2px; border: 2px solid var(--md-primary); }
+        .status-item.add-new .status-avatar-wrapper { border: 2px dashed var(--md-outline); display:flex; align-items:center; justify-content:center; background: var(--md-surface-variant); }
+        .status-avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+        .status-name { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center; }
+
+        .chats-list-container { flex: 1; overflow-y: auto; }
+        .chat-row { display: flex; align-items: center; padding: 16px 20px; gap: 16px; cursor: pointer; width: 100%; }
+        .avatar { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; }
+        .chat-row-info { flex: 1; min-width: 0; }
+        .chat-row-info h4 { font-size: 17px; font-weight: 600; display:flex; align-items: center; justify-content:space-between; }
+        .chat-row-info p { font-size: 14px; color: var(--md-on-surface-variant); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .verified-badge-icon { color: var(--md-primary); font-size: 16px; margin-left: 4px; display: inline-flex; align-items: center; vertical-align: middle; font-fill: 1; }
+
+        .chat-container { flex: 1; overflow-y: auto; padding: 16px; background-color: var(--md-bg-chat); position: relative; display: flex; flex-direction: column; }
+        .msg-wrapper { display: flex; flex-direction: column; max-width: 78%; margin-bottom: 8px; }
+        .msg-wrapper.me { align-self: flex-end; align-items: flex-end; }
+        .msg-wrapper.other { align-self: flex-start; align-items: flex-start; }
+        .bubble { padding: 10px 14px; border-radius: 20px; font-size: 15px; word-break: break-word; box-shadow: 0 1px 2px rgba(0,0,0,0.05); position: relative; display: flex; flex-direction: column; }
+        .me .bubble { background-color: var(--md-primary-container); border-bottom-right-radius: 4px; }
+        .other .bubble { background-color: white; border-bottom-left-radius: 4px; }
+        .bubble img { max-width: 100%; border-radius: 12px; display: block; margin-bottom: 4px; }
+        .bubble-time { font-size: 10px; color: var(--md-on-surface-variant); opacity: 0.7; align-self: flex-end; margin-top: 4px; margin-left: 8px; }
+        .audio-player { height: 36px; outline: none; max-width: 200px; margin-top: 4px; }
+        
+        .m3-bottom-bar { min-height: 70px; background: var(--md-surface); display: flex; align-items: center; padding: 8px 16px; gap: 8px; width: 100%; z-index:10; }
+        .input-field-container { flex: 1; background-color: var(--md-surface-variant); border-radius: 24px; padding: 0 16px; display: flex; align-items: center; height: 48px; }
+        .input-field-container input { width: 100%; border: none; background: transparent; outline: none; font-size: 16px; user-select: text; -webkit-user-select: text; }
+        
+        .record-btn { background: var(--md-primary); color: white; transition: 0.2s; }
+        .record-btn.recording { background: var(--md-error); transform: scale(1.2); animation: pulse 1s infinite; }
+
+        @keyframes pulse { 
+            0% { box-shadow: 0 0 0 0 rgba(186, 26, 26, 0.4); } 
+            70% { box-shadow: 0 0 0 10px rgba(186, 26, 26, 0); } 
+            100% { box-shadow: 0 0 0 0 rgba(186, 26, 26, 0); } 
         }
 
-        .posts-list {
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-            padding-bottom: 80px;
-        }
+        .status-viewer-modal { position: fixed; top:0; left:0; width:100vw; height:100dvh; background: black; z-index: 10000; display:none; flex-direction:column; justify-content:center; align-items:center; }
+        .status-viewer-modal.active { display: flex; }
+        .status-progress-bar { position: absolute; top: calc(10px + env(safe-area-inset-top)); left: 10px; right: 10px; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px; overflow: hidden; }
+        .status-progress-fill { height: 100%; width: 0%; background: white; transition: width 30s linear; }
+        .status-viewer-header { position: absolute; top: calc(20px + env(safe-area-inset-top)); left:16px; right:16px; display:flex; align-items:center; justify-content:space-between; color:white; width: 92%; }
+        .status-img-content { max-width:100%; max-height:80dvh; object-fit: contain; }
 
-        .post-card {
-            border-bottom: 1px solid #e0e0e0;
-            padding-bottom: 15px;
-        }
-
-        .post-author-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-
-        .author-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .author-avatar {
-            width: 35px;
-            height: 35px;
-            background-color: #e0e0e0;
-            border-radius: 0;
-        }
-
-        .author-name {
-            font-size: 15px;
-            font-weight: 400;
-        }
-
-        .btn-subscribe {
-            font-family: '42dot Sans', sans-serif;
-            font-size: 11px;
-            padding: 3px 8px;
-            border: 1px solid #000000;
-            background: transparent;
-            cursor: pointer;
-        }
-
-        .post-text {
-            font-size: 15px;
-            font-weight: 300;
-            line-height: 1.4;
-            margin-bottom: 10px;
-        }
-
-        .post-image {
-            width: 100%;
-            max-height: 300px;
-            object-fit: cover;
-            margin-bottom: 10px;
-            border: 1px solid #000000;
-        }
-
-        .post-actions {
-            display: flex;
-            gap: 20px;
-            font-size: 14px;
-            align-items: center;
-        }
-
-        .action-item {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .action-item.liked {
-            font-weight: bold;
-        }
-
-        /* Комментарии внутри поста */
-        .comments-section {
-            margin-top: 10px;
-            background-color: #f9f9f9;
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .comment-item {
-            font-size: 13px;
-            line-height: 1.3;
-        }
-
-        .comment-user {
-            font-weight: 400;
-        }
-
-        .comment-input-row {
-            display: flex;
-            gap: 5px;
-            margin-top: 5px;
-        }
-
-        .comment-input-row input {
-            flex: 1;
-            font-family: '42dot Sans', sans-serif;
-            font-size: 13px;
-            padding: 4px;
-            border: 1px solid #000000;
-            outline: none;
-        }
-
-        .comment-input-row button {
-            font-family: '42dot Sans', sans-serif;
-            font-size: 12px;
-            padding: 0 8px;
-            background: #000000;
-            color: #ffffff;
-            border: none;
-            cursor: pointer;
-        }
-
-        /* ================= ЭКРАН ПУБЛИКАЦИИ ПОСТА ================= */
-        .publish-wrapper {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .textarea-post {
-            font-family: '42dot Sans', sans-serif;
-            width: 100%;
-            height: 120px;
-            border: 1px solid #000000;
-            padding: 10px;
-            font-size: 15px;
-            resize: none;
-            outline: none;
-        }
-
-        .file-input-label {
-            display: inline-block;
-            padding: 10px;
-            border: 1px dashed #000000;
-            text-align: center;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        #filePreview {
-            width: 100%;
-            max-height: 150px;
-            object-fit: cover;
-            display: none;
-            border: 1px solid #000000;
-        }
-
-        /* Нижний таб-бар на главном экране */
-        .nav-tab-bar {
-            position: fixed;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            max-width: 400px;
-            height: 65px;
-            background-color: #ffffff;
-            border-top: 1px solid #e0e0e0;
-            display: none; 
-            justify-content: space-around;
-            align-items: center;
-            z-index: 10;
-        }
-
-        .tab-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            width: 44px;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 0.2s ease;
-        }
-
-        .tab-btn:active {
-            opacity: 0.5;
-        }
-
-        .tab-btn svg {
-            width: 24px;
-            height: 24px;
-            fill: none;
-            stroke: #000000;
-            stroke-width: 1.5;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-
-        .tab-btn.tab-active svg {
-            stroke-width: 2.5;
-        }
-
-        .tab-btn-center {
-            width: 48px;
-            height: 48px;
-            background-color: #000000;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.1s ease;
-        }
-
-        .tab-btn-center:active {
-            transform: scale(0.92);
-        }
-
-        .tab-btn-center svg {
-            width: 20px;
-            height: 20px;
-            stroke: #ffffff;
-            stroke-width: 2;
-        }
-
-        /* Кнопка Опубликовать в ее обычном и заблокированном состоянии */
-        .btn-publish-submit:disabled {
-            background: #555555;
-            cursor: not-allowed;
-            opacity: 0.7;
-            transform: none !important;
-        }
-
-        /* ================= КНОПКИ И УПРАВЛЕНИЕ ================= */
-        .button-group {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .btn {
-            font-family: '42dot Sans', sans-serif;
-            font-size: 16px;
-            font-weight: 400;
-            width: 100%;
-            padding: clamp(13px, 1.8vh, 17px);
-            border: 1px solid #000000;
-            cursor: pointer;
-            transition: transform 0.1s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.3s ease, color 0.3s ease;
-            text-align: center;
-            text-decoration: none;
-            outline: none;
-            border-radius: 0;
-        }
-
-        .btn:active {
-            transform: scale(0.97);
-        }
-
-        .btn-login {
-            background: linear-gradient(180deg, #1c1c1c 0%, #0d0d0d 100%);
-            color: #ffffff;
-            border: none;
-        }
-
-        .btn-register {
-            background-color: #ffffff;
-            color: #000000;
-        }
-
-        .btn-continue {
-            background-color: #666666;
-            color: #ffffff;
-            border: none;
-            display: none;
-        }
-
-        .btn-continue.ready {
-            background-color: #000000;
-        }
-
-        /* Футер */
-        .footer-section {
-            width: 100%;
-            max-width: 400px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: clamp(12px, 2vh, 25px);
-            z-index: 3;
-            flex-shrink: 0;
-        }
-
-        .version {
-            font-size: 13px;
-            font-weight: 300;
-            font-style: italic;
-            color: #7f7f7f;
-            user-select: none;
-        }
+        .call-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: #111418; color: white; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: space-between; opacity: 0; pointer-events: none; transition: 0.4s; padding: calc(20px + env(safe-area-inset-top)) 20px calc(40px + env(safe-area-inset-bottom)) 20px; }
+        .call-overlay.active { opacity: 1; pointer-events: auto; }
+        .video-container-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background: #000; }
+        .remote-video-stream { width: 100%; height: 100%; object-fit: cover; }
+        .local-video-stream { position: absolute; top: calc(20px + env(safe-area-inset-top)); right: 20px; width: 110px; height: 160px; object-fit: cover; border-radius: 16px; border: 2px solid rgba(255,255,255,0.5); z-index: 10; background: #222; }
+        .call-ui-data { z-index: 5; text-align: center; margin-top: 40px; }
+        .call-avatar { width: 140px; height: 140px; border-radius: 50%; object-fit: cover; margin-bottom: 20px; }
+        .call-actions { margin-bottom: 20px; display: flex; align-items: center; gap: 16px; z-index: 100; flex-wrap: wrap; justify-content: center; }
+        
+        .btn-call-circle { width: 60px; height: 60px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; background: rgba(255,255,255,0.2); color: white; backdrop-filter: blur(10px); }
+        .btn-call-circle.active-toggle { background: white; color: black; }
+        .btn-call-decline { background-color: #ff4a4a; color: white; }
+        .btn-call-accept { background-color: #34a853; color: white; }
+        .hidden { display: none !important; }
+        
+        .chat-overlay-status { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--md-bg-chat); z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px; text-align: center; }
+        .admin-req-card { background: white; margin: 12px 16px; padding: 16px; border-radius: 16px; display:flex; flex-direction:column; gap:12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        
+        .missed-call-text { color: var(--md-error) !important; font-weight: 600; }
+        .call-log-row { display: flex; align-items: center; padding: 14px 20px; gap: 16px; border-bottom: 1px solid rgba(0,0,0,0.03); }
+        .call-log-info { flex: 1; }
+        .call-log-info h5 { font-size: 16px; font-weight: 600; }
+        .call-log-info p { font-size: 13px; color: var(--md-on-surface-variant); }
+        .call-log-icon { color: var(--md-on-surface-variant); }
     </style>
 </head>
 <body>
 
-    <div class="decor decor-top-right" id="decorTopRight"></div>
-    <div class="decor decor-left" id="decorLeft"></div>
-    <div class="decor decor-bottom-right" id="decorBottomRight"></div>
-
-    <div class="header-section">
-        <button class="btn-back" id="backBtn" onclick="handleBack()">назад</button>
-        <button class="btn-logout" id="logoutBtn" onclick="logoutUserInSupabase()">выход</button>
+    <div id="auth-screen" class="screen active">
+        <div class="auth-card">
+            <span class="material-symbols-rounded" style="font-size: 56px; color: var(--md-primary); margin-bottom: 16px;">chat_bubble</span>
+            <h2 style="margin-bottom: 24px;">Войти в Ion</h2>
+            <div class="m3-input-group">
+                <input type="text" id="auth-username" placeholder="Имя пользователя (уникальное)">
+                <input type="password" id="auth-password" placeholder="Пароль">
+            </div>
+            <div style="display:flex; flex-direction:column; gap:12px; margin-top:8px;">
+                <button id="btn-login" class="m3-btn m3-btn-filled">Войти</button>
+                <button id="btn-go-register" class="m3-btn m3-btn-tonal">Создать аккаунт</button>
+            </div>
+        </div>
     </div>
 
-    <div class="screen-container">
+    <div id="register-screen" class="screen">
+        <div class="auth-card">
+            <h2 style="margin-bottom: 24px;">Регистрация</h2>
+            <div class="m3-input-group">
+                <input type="text" id="reg-name" placeholder="Ваше имя">
+                <input type="text" id="reg-username" placeholder="Юзернейм (латиница)">
+                <input type="password" id="reg-password" placeholder="Пароль">
+                <input type="text" id="reg-avatar" placeholder="Ссылка на фото (необязательно)">
+            </div>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+                <button id="btn-register" class="m3-btn m3-btn-filled">Зарегистрироваться</button>
+                <button id="btn-go-login" class="m3-btn m3-btn-tonal">Назад ко входу</button>
+            </div>
+        </div>
+    </div>
 
-        <div class="app-screen active" id="screenWelcome">
-            <div class="welcome-wrapper">
-                <div class="welcome-brand">
-                    <img src="https://raw.githubusercontent.com/LumoCreator/Ion/refs/heads/main/LOGO.svg" alt="Ion Логотип" class="welcome-logo">
-                    <p class="welcome-subtitle">социальная сеть</p>
+    <div id="chats-screen" class="screen">
+        <div id="view-chats-sub" class="sub-view active">
+            <header class="m3-top-bar">
+                <h2>Ion Messenger</h2>
+            </header>
+            
+            <div class="status-bar" id="status-bar-container"></div>
+            <input type="file" id="status-file-input" accept="image/*" style="display:none;">
+
+            <main class="chats-list-container" id="chats-list-container"></main>
+            <button class="m3-fab" id="fab-create-chat">
+                <span class="material-symbols-rounded">chat</span> Новый чат
+            </button>
+        </div>
+
+        <div id="view-calls-sub" class="sub-view">
+            <header class="m3-top-bar">
+                <h2>Вызовы</h2>
+            </header>
+            <main class="chats-list-container" id="calls-log-list" style="padding-top: 8px;"></main>
+        </div>
+
+        <div id="view-admin-sub" class="sub-view">
+            <header class="m3-top-bar">
+                <h2>Админ-панель</h2>
+            </header>
+            <main class="chats-list-container" style="padding: 16px 0;">
+                <div style="padding: 0 16px 16px 16px; border-bottom: 1px solid var(--md-surface-variant); margin-bottom: 12px;">
+                    <h4 style="margin-bottom: 8px;">Отобрать галочку верификации</h4>
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" id="admin-revoke-username" placeholder="Юзернейм пользователя" style="flex:1; height:40px; border-radius:8px; border:1px solid var(--md-outline); padding:0 12px; outline:none;">
+                        <button id="btn-admin-revoke" class="m3-btn m3-btn-error" style="height:40px; padding:0 16px; border-radius:8px;">Отобрать</button>
+                    </div>
                 </div>
-                <div class="button-group">
-                    <button class="btn btn-login" onclick="goToStep('login')">Войти в аккаунт</button>
-                    <button class="btn btn-register" onclick="goToStep(1)">Создать аккаунт</button>
+                <h3 style="padding: 0 16px 8px 16px; font-size:16px;">Заявки на верификацию:</h3>
+                <div id="admin-requests-root"></div>
+            </main>
+        </div>
+
+        <div id="view-settings-sub" class="sub-view">
+            <header class="m3-top-bar">
+                <h2>Настройки</h2>
+            </header>
+            <main class="chats-list-container" style="padding: 24px 20px; display:flex; flex-direction:column; gap:20px;">
+                <div style="text-align:center;">
+                    <img id="settings-my-avatar" src="https://via.placeholder.com/150" style="width:100px; height:100px; border-radius:50%; object-fit:cover; margin-bottom:8px;">
+                    <h3 id="settings-my-name" style="display:flex; align-items:center; justify-content:center;">Загрузка...</h3>
+                    <p id="settings-my-username" style="color:var(--md-on-surface-variant); font-size:14px;"></p>
                 </div>
-            </div>
+                <button id="btn-request-verification" class="m3-btn m3-btn-tonal" style="width:100%;">
+                    <span class="material-symbols-rounded">verified</span> Подать заявку на верификацию
+                </button>
+                <button id="btn-activate-push" class="m3-btn m3-btn-filled" style="width:100%;">
+                    <span class="material-symbols-rounded">notifications</span> Включить PWA пуш-уведомления
+                </button>
+                <button id="btn-logout" class="m3-btn m3-btn-error" style="width:100%; margin-top:auto;">
+                    <span class="material-symbols-rounded">logout</span> Выйти из аккаунта
+                </button>
+            </main>
         </div>
 
-        <div class="app-screen" id="screenLogin">
-            <h2 class="step-title">Авторизация</h2>
-            <div class="brand-row">
-                <img src="https://raw.githubusercontent.com/LumoCreator/Ion/refs/heads/main/LOGO.svg" alt="Ion" class="logo-mini">
-                <span class="brand-divider">—</span>
-                <span class="brand-sub">социальная сеть</span>
+        <footer class="m3-navigation-bar">
+            <div class="m3-nav-item active" id="nav-item-chats">
+                <div class="m3-nav-icon-wrapper"><span class="material-symbols-rounded">chat</span></div>
+                <span class="m3-nav-label">ЧАТЫ</span>
             </div>
-
-            <div class="info-block">
-                <h3 class="info-title">Вход в профиль</h3>
-                <p class="info-desc">введите ваши данные доступа</p>
+            <div class="m3-nav-item" id="nav-item-calls">
+                <div class="m3-nav-icon-wrapper"><span class="material-symbols-rounded">call</span></div>
+                <span class="m3-nav-label">ВЫЗОВЫ</span>
             </div>
-
-            <div class="input-group" id="group_login_email">
-                <input type="email" class="input-field" id="login_email" placeholder="email" oninput="validateLoginScreen()">
-                <div class="status-icon"></div>
+            <div class="m3-nav-item hidden" id="nav-item-admin">
+                <div class="m3-nav-icon-wrapper"><span class="material-symbols-rounded">admin_panel_settings</span></div>
+                <span class="m3-nav-label">АДМИН</span>
             </div>
-            <div class="input-group" id="group_login_password">
-                <input type="password" class="input-field" id="login_password" placeholder="пароль" oninput="validateLoginScreen()">
-                <div class="status-icon"></div>
+            <div class="m3-nav-item" id="nav-item-settings">
+                <div class="m3-nav-icon-wrapper"><span class="material-symbols-rounded">settings</span></div>
+                <span class="m3-nav-label">НАСТРОЙКИ</span>
             </div>
-        </div>
-
-        <div class="app-screen" id="screenStep1">
-            <h2 class="step-title">Создание аккаунта - шаг 1</h2>
-            <div class="brand-row">
-                <img src="https://raw.githubusercontent.com/LumoCreator/Ion/refs/heads/main/LOGO.svg" alt="Ion" class="logo-mini">
-                <span class="brand-divider">—</span>
-                <span class="brand-sub">социальная сеть</span>
-            </div>
-
-            <div class="info-block">
-                <h3 class="info-title">Ваши данные</h3>
-                <p class="info-desc">это безопасно.</p>
-            </div>
-
-            <div class="input-group" id="group_email">
-                <input type="email" class="input-field" id="email" placeholder="email" oninput="validateStep1()">
-                <div class="status-icon"></div>
-            </div>
-            <div class="input-group" id="group_firstname">
-                <input type="text" class="input-field" id="firstname" placeholder="имя" oninput="validateStep1()">
-                <div class="status-icon"></div>
-            </div>
-            <div class="input-group" id="group_lastname">
-                <input type="text" class="input-field" id="lastname" placeholder="фамилия (по желанию)" oninput="validateStep1()">
-                <div class="status-icon"></div>
-            </div>
-            <div class="input-group" id="group_nickname">
-                <input type="text" class="input-field" id="nickname" placeholder="никнейм" oninput="cleanNicknameInput(); validateStep1();">
-                <div class="status-icon"></div>
-            </div>
-            <div class="input-group" id="group_birthdate">
-                <input type="text" maxlength="10" class="input-field" id="birthdate" placeholder="день рождения" oninput="formatBirthdateInput(); validateStep1();">
-                <div class="status-icon"></div>
-            </div>
-        </div>
-
-        <div class="app-screen" id="screenStep2">
-            <h2 class="step-title">Создание аккаунта - шаг 2</h2>
-            <div class="brand-row">
-                <img src="https://raw.githubusercontent.com/LumoCreator/Ion/refs/heads/main/LOGO.svg" alt="Ion" class="logo-mini">
-                <span class="brand-divider">—</span>
-                <span class="brand-sub">социальная сеть</span>
-            </div>
-
-            <div class="info-block">
-                <h3 class="info-title">Придумайте пароль</h3>
-                <p class="info-desc">он будет использоваться для входа</p>
-            </div>
-
-            <div class="input-group">
-                <input type="password" class="input-field" id="password" placeholder="Пароль" oninput="validateStep2()">
-            </div>
-            <div class="input-group">
-                <input type="password" class="input-field" id="password_confirm" placeholder="Повторите пароль" oninput="validateStep2()">
-            </div>
-
-            <ul class="password-requirements">
-                <li class="req-item" id="reqMatch"><div class="req-box"></div> — пароли совпадают</li>
-                <li class="req-item" id="reqLength"><div class="req-box"></div> — больше 6-и символов</li>
-                <li class="req-item" id="reqSpecial"><div class="req-box"></div> — есть хотя бы один специальный символ</li>
-            </ul>
-        </div>
-
-        <div class="app-screen" id="screenStep3">
-            <h2 class="step-title">Создание аккаунта - шаг 3</h2>
-            <div class="brand-row">
-                <img src="https://raw.githubusercontent.com/LumoCreator/Ion/refs/heads/main/LOGO.svg" alt="Ion" class="logo-mini">
-                <span class="brand-divider">—</span>
-                <span class="brand-sub">социальная сеть</span>
-            </div>
-
-            <div class="info-block">
-                <h3 class="info-title">Введите код из Email</h3>
-                <p class="info-desc" id="codeSentDesc">код отправлен на email:</p>
-            </div>
-
-            <div class="code-group">
-                <input type="tel" maxlength="1" class="code-input" oninput="moveCodeFocus(this, 0)" onkeydown="backspaceCode(this, 0)">
-                <input type="tel" maxlength="1" class="code-input" oninput="moveCodeFocus(this, 1)" onkeydown="backspaceCode(this, 1)">
-                <input type="tel" maxlength="1" class="code-input" oninput="moveCodeFocus(this, 2)" onkeydown="backspaceCode(this, 2)">
-                <input type="tel" maxlength="1" class="code-input" oninput="moveCodeFocus(this, 3)" onkeydown="backspaceCode(this, 3)">
-            </div>
-        </div>
-
-        <div class="app-screen" id="screenFeed">
-            <div class="feed-header">
-                <h1>Посты</h1>
-            </div>
-            <div class="posts-list" id="postsContainer">
-                </div>
-        </div>
-
-        <div class="app-screen" id="screenPublish">
-            <h2 class="step-title">Новая публикация</h2>
-            <div class="publish-wrapper">
-                <textarea class="textarea-post" id="postText" placeholder="Что у вас нового?"></textarea>
-                
-                <label class="file-input-label">
-                    📎 Выбрать фотографию
-                    <input type="file" id="postFileInput" accept="image/*" style="display:none;" onchange="previewFile()">
-                </label>
-                
-                <img id="filePreview" alt="Превью">
-                <button class="btn btn-login btn-publish-submit" id="publishSubmitBtn" style="margin-top:10px;" onclick="publishPost()">Опубликовать</button>
-            </div>
-        </div>
-
+        </footer>
     </div>
 
-    <div class="nav-tab-bar" id="appTabBar">
-        <button class="tab-btn id-btn-feed" onclick="goToStep('feed')">
-            <svg viewBox="0 0 24 24">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                <polyline points="9 22 9 12 15 12 15 22"></polyline>
-            </svg>
-        </button>
-        <button class="tab-btn tab-btn-center" onclick="goToStep('publish')">
-            <svg viewBox="0 0 24 24">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-        </button>
-        <button class="tab-btn id-btn-profile" onclick="alert('Профиль в разработке')">
-            <svg viewBox="0 0 24 24">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-            </svg>
-        </button>
+    <div id="create-chat-screen" class="screen">
+        <header class="m3-top-bar">
+            <button class="m3-icon-btn" id="back-to-chats"><span class="material-symbols-rounded">arrow_back</span></button>
+            <h2>Новый чат</h2>
+            <div style="width:44px;"></div>
+        </header>
+        <div style="padding: 16px;" class="m3-input-group">
+            <input type="text" id="search-username" placeholder="Введите юзернейм для поиска...">
+        </div>
+        <main class="chats-list-container" id="search-results"></main>
     </div>
 
-    <div class="footer-section">
-        <button class="btn btn-continue" id="continueBtn" onclick="handleContinue()">Продолжить</button>
-        <div class="version">demo version - 1.0</div>
-    </div>
-
-    <script>
-        // --- ИНИЦИАЛИЗАЦИЯ SUPABASE С ТВОИМИ ДАННЫМИ ---
-        const SUPABASE_URL = 'https://rnqdaqbvriztmfxwcxri.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJucWRhcWJ2cml6dG1meHdjeHJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2MjcwMjEsImV4cCI6MjA5NTIwMzAyMX0.S3JwkpGYsjMLoT2bBZxrDq4B8mEPnZY9FLTelaqqh3s';
+    <div id="chat-window-screen" class="screen">
+        <header class="m3-top-bar">
+            <button class="m3-icon-btn" id="back-from-chat"><span class="material-symbols-rounded">arrow_back</span></button>
+            <h2 id="chat-header-title">Собеседник</h2>
+            <div style="display:flex; gap:4px;">
+                <button class="m3-icon-btn" id="btn-start-voice-call"><span class="material-symbols-rounded">call</span></button>
+                <button class="m3-icon-btn" id="btn-start-video-call"><span class="material-symbols-rounded">videocam</span></button>
+            </div>
+        </header>
         
-        const clientSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        <main class="chat-container" id="messages-scroller">
+            <div id="messages-root" style="display:flex; flex-direction:column; padding-bottom: 20px;"></div>
+            
+            <div id="invite-send-overlay" class="chat-overlay-status hidden">
+                <span class="material-symbols-rounded" style="font-size:48px; color:var(--md-primary);">lock</span>
+                <h3 style="margin-top:12px;">Это закрытый профиль</h3>
+                <p style="font-size:14px; color:var(--md-on-surface-variant); margin: 6px 0 16px 0;">Вы сможете общаться после одобрения запроса.</p>
+                <button id="btn-send-invite" class="m3-btn m3-btn-filled">Отправить запрос</button>
+            </div>
+        </main>
 
-        let currentAppState = 'welcome'; 
-        let currentUser = null; 
-        let codeValues = ["", "", "", ""];
+        <footer id="chat-bottom-bar" class="m3-bottom-bar">
+            <input type="file" id="file-input" accept="image/*" style="display:none;">
+            <button id="attach-btn" class="m3-icon-btn"><span class="material-symbols-rounded">add_photo_alternate</span></button>
+            <div class="input-field-container">
+                <input type="text" id="message-input" placeholder="Сообщение..." autocomplete="off">
+            </div>
+            <button id="voice-record-btn" class="m3-icon-btn record-btn"><span class="material-symbols-rounded">mic</span></button>
+            <button id="send-btn" class="m3-icon-btn hidden" style="background:var(--md-primary); color:white;"><span class="material-symbols-rounded">send</span></button>
+        </footer>
+    </div>
 
-        // Базовые углы поворота для анимаций экранов
-        let baseAngles = {
-            welcome: { top: 25, left: 35 },
-            login: { top: -10, left: 20 },
-            step1: { top: 45, left: 15 },
-            step2: { top: 10, left: 55 },
-            step3: { top: 60, left: 5 },
-            feed: { top: 15, left: -15 },
-            publish: { top: -20, left: 40 }
+    <div class="status-viewer-modal" id="status-viewer-modal">
+        <div class="status-progress-bar"><div class="status-progress-fill" id="status-progress-fill"></div></div>
+        <div class="status-viewer-header">
+            <span id="status-viewer-username" style="font-weight:600;">Имя</span>
+            <button class="m3-icon-btn" id="btn-close-status" style="color:white;"><span class="material-symbols-rounded">close</span></button>
+        </div>
+        <img class="status-img-content" id="status-viewer-img" src="">
+    </div>
+
+    <div class="call-overlay" id="call-screen">
+        <div class="video-container-layer hidden" id="video-layer">
+            <video class="remote-video-stream" id="remote-video" autoplay playsinline></video>
+            <video class="local-video-stream" id="local-video" autoplay playsinline muted></video>
+        </div>
+        
+        <div class="call-ui-data">
+            <img class="call-avatar" id="call-screen-avatar" src="https://via.placeholder.com/150">
+            <h2 id="call-screen-name">Пользователь</h2>
+            <p id="call-status-label" style="margin-top:8px; opacity:0.8; font-size:16px;">Установление связи...</p>
+        </div>
+
+        <div class="call-actions">
+            <button class="btn-call-circle btn-call-accept hidden" id="accept-call-btn"><span class="material-symbols-rounded">call</span></button>
+            <button class="btn-call-circle hidden" id="flip-cam-btn"><span class="material-symbols-rounded">switch_camera</span></button>
+            <button class="btn-call-circle hidden" id="toggle-video-btn"><span class="material-symbols-rounded">videocam</span></button>
+            <button class="btn-call-circle id="mute-call-btn"><span class="material-symbols-rounded" id="mute-icon">mic</span></button>
+            <button class="btn-call-circle btn-call-decline" id="decline-call-btn"><span class="material-symbols-rounded">call_end</span></button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy, serverTimestamp, arrayUnion } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+        import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-messaging.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA_nMOvRvO0mMjxt9nhmM_7fMdtM832pX4",
+            authDomain: "messenger-ion.firebaseapp.com",
+            projectId: "messenger-ion",
+            storageBucket: "messenger-ion.firebasestorage.app",
+            messagingSenderId: "904598269438",
+            appId: "1:904598269438:web:d6990731a5d09ce5e6e4af",
+            measurementId: "G-6JSZ0Z9Z0C"
         };
 
-        // Последние координаты мыши
-        let lastMouseX = 0;
-        let lastMouseY = 0;
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        let messaging = null;
+        try { messaging = getMessaging(app); } catch(e) { console.log("FCM не поддерживается в этом браузере"); }
 
-        // Элементы интерфейса
-        const continueBtn = document.getElementById('continueBtn');
-        const backBtn = document.getElementById('backBtn');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const appTabBar = document.getElementById('appTabBar');
+        const VAPID_KEY = "BDMZCptUBR2oiY60HUyslo6cUV7q7FJSoQ5HUKRgNuiuLOjsldWedf0lE24Pj7ZVgVzaeYkzEZs_p1D7zsCkgs4";
+        const APP_CRYPTO_SECRET = "ION_MESSENGER_SECURE_SALT_2026_!!";
 
-        // ================= СИСТЕМА СОХРАНЕНИЯ СЕССИИ (АВТО-ВХОД) =================
-        async function checkActiveUserSession() {
-            const { data: { session }, error } = await clientSupabase.auth.getSession();
-            if (session && session.user) {
-                currentUser = session.user;
-                goToStep('feed');
+        // Глобальные состояния
+        let myProfile = null;
+        let currentChatId = null;
+        let currentChatUser = null;
+        let activeChatUserIds = new Set();
+        let activeCallTimer = null;
+
+        // WebRTC состояния
+        let localStream = null;
+        let peerConnection = null;
+        let currentCallId = null;
+        let isFrontCam = true;
+        let isMuted = false;
+        let isVideoDisabled = false;
+        let isCallActive = false;
+        
+        // Звуковой движок генерации рингтонов (Web Audio API)
+        let audioCtx = null;
+        let ringtoneInterval = null;
+
+        // Инициализация Web Audio
+        function initAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             }
         }
 
-        // Подписка на изменение состояния авторизации
-        clientSupabase.auth.onAuthStateChange((event, session) => {
-            if (event === 'SIGNED_IN' && session) {
-                currentUser = session.user;
-            } else if (event === 'SIGNED_OUT') {
-                currentUser = null;
-                goToStep('welcome');
-            }
-        });
-
-        // ================= СИСТЕМА ПЕРЕКЛЮЧЕНИЯ ЭКРАНОВ =================
-        function goToStep(target) {
-            document.getElementById('screenWelcome').classList.remove('active');
-            document.getElementById('screenLogin').classList.remove('active');
-            document.getElementById('screenStep1').classList.remove('active');
-            document.getElementById('screenStep2').classList.remove('active');
-            document.getElementById('screenStep3').classList.remove('active');
-            document.getElementById('screenFeed').classList.remove('active');
-            document.getElementById('screenPublish').classList.remove('active');
-
-            // Сброс подсветки активных табов
-            document.querySelector('.id-btn-feed').classList.remove('tab-active');
-            document.querySelector('.id-btn-profile').classList.remove('tab-active');
-
-            currentAppState = target;
-            document.querySelector('.screen-container').scrollTop = 0;
-
-            // Контроль видимости таб-бара, кнопки Назад и Выход
-            if (target === 'feed' || target === 'publish') {
-                appTabBar.style.display = 'flex';
-                backBtn.classList.remove('visible');
-                logoutBtn.style.display = 'block'; 
-                continueBtn.style.display = 'none';
-                if(target === 'feed') document.querySelector('.id-btn-feed').classList.add('tab-active');
-            } else {
-                appTabBar.style.display = 'none';
-                logoutBtn.style.display = 'none';
-            }
-
-            // Управление состояниями экранов
-            if (target === 'welcome') {
-                document.getElementById('screenWelcome').classList.add('active');
-                backBtn.classList.remove('visible');
-                continueBtn.style.display = 'none';
-            } else if (target === 'login') {
-                document.getElementById('screenLogin').classList.add('active');
-                backBtn.classList.add('visible');
-                continueBtn.style.display = 'block';
-                validateLoginScreen();
-            } else if (target === 1) {
-                document.getElementById('screenStep1').classList.add('active');
-                backBtn.classList.add('visible');
-                continueBtn.style.display = 'block';
-                validateStep1();
-            } else if (target === 2) {
-                document.getElementById('screenStep2').classList.add('active');
-                backBtn.classList.add('visible');
-                continueBtn.style.display = 'block';
-                validateStep2();
-            } else if (target === 3) {
-                document.getElementById('screenStep3').classList.add('active');
-                backBtn.classList.add('visible');
-                continueBtn.style.display = 'block';
-                validateStep3();
-            } else if (target === 'feed') {
-                document.getElementById('screenFeed').classList.add('active');
-                loadFeedPosts();
-            } else if (target === 'publish') {
-                document.getElementById('screenPublish').classList.add('active');
-            }
-
-            // Синхронно обновляем положение под новый экран
-            updateDecorPositions(lastMouseX, lastMouseY);
-        }
-
-        // ================= ИНТЕРАКТИВНЫЙ ПАРАЛЛАКС ФОНА И КВАДРАТОВ =================
-        function updateDecorPositions(mouseX, mouseY) {
-            const topDecor = document.getElementById('decorTopRight');
-            const leftDecor = document.getElementById('decorLeft');
-            const bottomDecor = document.getElementById('decorBottomRight');
-
-            let stateKey = (typeof currentAppState === 'number') ? 'step' + currentAppState : currentAppState;
-            let currentAngles = baseAngles[stateKey] || { top: 0, left: 0 };
-
-            let moveTopX = mouseX * 30;
-            let moveTopY = mouseY * 30;
-            let moveLeftX = mouseX * -40;
-            let moveLeftY = mouseY * -40;
-            let moveBottomX = mouseX * 20;
-            let moveBottomY = mouseY * 20;
-
-            if (topDecor) {
-                topDecor.style.transform = `translate(${moveTopX}px, ${moveTopY}px) rotate(${currentAngles.top}deg)`;
-            }
-            if (leftDecor) {
-                leftDecor.style.transform = `translate(${moveLeftX}px, ${moveLeftY}px) translateY(-50%) rotate(${currentAngles.left}deg)`;
-            }
-            if (bottomDecor) {
-                bottomDecor.style.transform = `translate(${moveBottomX}px, ${moveBottomY}px) rotate(15deg)`;
-            }
-        }
-
-        // Отслеживание мыши
-        document.addEventListener('mousemove', (e) => {
-            lastMouseX = (e.clientX / window.innerWidth) - 0.5;
-            lastMouseY = (e.clientY / window.innerHeight) - 0.5;
-            updateDecorPositions(lastMouseX, lastMouseY);
-        });
-
-        // Фильтрация ввода никнейма (только a-z, A-Z, 0-9 и _)
-        function cleanNicknameInput() {
-            const nicknameField = document.getElementById('nickname');
-            nicknameField.value = nicknameField.value.replace(/[^a-zA-Z0-9_]/g, '');
-        }
-
-        // Форматирование даты рождения (ДД.ММ.ГГГГ)
-        function formatBirthdateInput() {
-            const dateField = document.getElementById('birthdate');
-            let val = dateField.value.replace(/\D/g, ''); 
+        // КРУТОЙ СИНТЕЗИРОВАННЫЙ РИНГТОН С ПОЛИФОНИЕЙ НА WEB AUDIO API
+        function playCoolRingtone(isIncoming) {
+            initAudioContext();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
             
-            if (val.length > 2 && val.length <= 4) {
-                val = val.slice(0, 2) + '.' + val.slice(2);
-            } else if (val.length > 4) {
-                val = val.slice(0, 2) + '.' + val.slice(2, 4) + '.' + val.slice(4, 8);
-            }
-            dateField.value = val;
-        }
-
-        // Валидация экрана Авторизации (Входа)
-        function validateLoginScreen() {
-            const email = document.getElementById('login_email').value.trim();
-            const pass = document.getElementById('login_password').value;
-
-            document.getElementById('group_login_email').classList.toggle('field-valid', email !== "");
-            document.getElementById('group_login_password').classList.toggle('field-valid', pass.length >= 6);
-
-            if (email !== "" && pass.length >= 6) {
-                continueBtn.classList.add('ready');
-                return true;
-            } else {
-                continueBtn.classList.remove('ready');
-                return false;
-            }
-        }
-
-        // Валидация Шага 1 Регистрации
-        function validateStep1() {
-            const email = document.getElementById('email').value.trim();
-            const firstname = document.getElementById('firstname').value.trim();
-            const lastname = document.getElementById('lastname').value.trim();
-            const nickname = document.getElementById('nickname').value.trim();
-            const birthdate = document.getElementById('birthdate').value.trim();
-
-            document.getElementById('group_email').classList.toggle('field-valid', email !== "");
-            document.getElementById('group_firstname').classList.toggle('field-valid', firstname !== "");
-            document.getElementById('group_lastname').classList.toggle('field-valid', lastname !== "");
-            document.getElementById('group_nickname').classList.toggle('field-valid', nickname !== "");
+            stopRingtone();
             
-            const isBirthdateComplete = (birthdate.length === 10);
-            document.getElementById('group_birthdate').classList.toggle('field-valid', isBirthdateComplete);
+            // Мелодия: Маримба-клики (Арпеджио E5 -> G5 -> A5 -> C6)
+            const notes = isIncoming ? [659.25, 783.99, 880.00, 1046.50] : [523.25, 659.25, 523.25, 659.25];
+            let step = 0;
 
-            if (email !== "" && firstname !== "" && nickname !== "" && isBirthdateComplete) {
-                continueBtn.classList.add('ready');
-                return true;
-            } else {
-                continueBtn.classList.remove('ready');
-                return false;
+            ringtoneInterval = setInterval(() => {
+                try {
+                    let osc = audioCtx.createOscillator();
+                    let gain = audioCtx.createGain();
+                    
+                    osc.type = isIncoming ? 'triangle' : 'sine';
+                    osc.frequency.setValueAtTime(notes[step % notes.length], audioCtx.currentTime);
+                    
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+                    
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.35);
+                    step++;
+                } catch(e) { console.error(e); }
+            }, isIncoming ? 150 : 400);
+        }
+
+        function stopRingtone() {
+            if (ringtoneInterval) {
+                clearInterval(ringtoneInterval);
+                ringtoneInterval = null;
             }
         }
 
-        // Валидация Шага 2 Регистрации
-        function validateStep2() {
-            const pass = document.getElementById('password').value;
-            const confirm = document.getElementById('password_confirm').value;
-
-            const match = (pass === confirm && pass !== "");
-            document.getElementById('reqMatch').classList.toggle('valid', match);
-
-            const lengthValid = pass.length > 6;
-            document.getElementById('reqLength').classList.toggle('valid', lengthValid);
-
-            const specialValid = /[!@#$%^&*(),.?":{}|<>_+\-\[\]\\\/]/.test(pass);
-            document.getElementById('reqSpecial').classList.toggle('valid', specialValid);
-
-            if (match && lengthValid && specialValid) {
-                continueBtn.classList.add('ready');
-                return true;
-            } else {
-                continueBtn.classList.remove('ready');
-                return false;
-            }
+        // УЛУЧШЕННОЕ КРИПТОГРАФИЧЕСКОЕ ШИФРОВАНИЕ
+        function encryptData(text, key) {
+            // Генерируем взвешенный крипто-ключ на основе ИД чата и секретной соли приложения
+            const secureKey = CryptoJS.HmacSHA256(key, APP_CRYPTO_SECRET).toString();
+            return CryptoJS.AES.encrypt(text, secureKey).toString();
         }
 
-        // Управление фокусом ячеек Email-кода
-        function moveCodeFocus(input, index) {
-            codeValues[index] = input.value;
-            if (input.value.length === 1 && index < 3) {
-                input.nextElementSibling.focus();
-            }
-            validateStep3();
-        }
-
-        function backspaceCode(input, index) {
-            if (event.key === 'Backspace' && input.value.length === 0 && index > 0) {
-                input.previousElementSibling.focus();
-            }
-        }
-
-        function validateStep3() {
-            const allFilled = codeValues.every(val => val.trim() !== "");
-            if (allFilled) {
-                continueBtn.classList.add('ready');
-                return true;
-            } else {
-                continueBtn.classList.remove('ready');
-                return false;
-            }
-        }
-
-        // Предпросмотр выбранной фотографии перед постом
-        function previewFile() {
-            const preview = document.getElementById('filePreview');
-            const file = document.getElementById('postFileInput').files[0];
-            const reader = new FileReader();
-
-            reader.onloadend = function () {
-                preview.src = reader.result;
-                preview.style.display = "block";
-            }
-
-            if (file) {
-                reader.readAsDataURL(file);
-            } else {
-                preview.src = "";
-                preview.style.display = "none";
-            }
-        }
-
-        // ================= БЭКЕНД: ВХОД В АККАУНТ =================
-        async function loginUserInSupabase() {
-            const email = document.getElementById('login_email').value.trim();
-            const password = document.getElementById('login_password').value;
-
-            continueBtn.innerText = 'Вход...';
-            continueBtn.classList.remove('ready');
-
-            const { data, error } = await clientSupabase.auth.signInWithPassword({
-                email: email,
-                password: password,
-            });
-
-            if (error) {
-                alert('Ошибка входа: ' + error.message);
-                continueBtn.innerText = 'Продолжить';
-                continueBtn.classList.add('ready');
-                return;
-            }
-
-            if (data.user) {
-                currentUser = data.user;
-                alert('Успешный вход!');
-                goToStep('feed');
-            }
-            continueBtn.innerText = 'Продолжить';
-        }
-
-        // ================= БЭКЕНД: ВЫХОД ИЗ АККАУНТА =================
-        async function logoutUserInSupabase() {
-            const { error } = await clientSupabase.auth.signOut();
-            if (error) {
-                alert('Ошибка выхода из аккаунта: ' + error.message);
-            } else {
-                currentUser = null;
-                goToStep('welcome');
-            }
-        }
-
-        // ================= БЭКЕНД: РЕГИСТРАЦИЯ ПОЛЬЗОВАТЕЛЯ =================
-        async function registerUserInSupabase() {
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-            const firstname = document.getElementById('firstname').value.trim();
-            const lastname = document.getElementById('lastname').value.trim();
-            const nickname = document.getElementById('nickname').value.trim();
-            const birthdate = document.getElementById('birthdate').value.trim();
-
-            continueBtn.innerText = 'Создание...';
-            continueBtn.classList.remove('ready');
-
-            // Создание аккаунта
-            const { data, error } = await clientSupabase.auth.signUp({
-                email: email,
-                password: password
-            });
-
-            if (error) {
-                alert('Ошибка регистрации: ' + error.message);
-                continueBtn.innerText = 'Продолжить';
-                continueBtn.classList.add('ready');
-                return;
-            }
-
-            if (data.user) {
-                currentUser = data.user;
-                
-                // Напрямую добавляем информацию в profiles
-                const { error: profileError } = await clientSupabase
-                    .from('profiles')
-                    .insert([
-                        { 
-                            id: data.user.id,
-                            firstname: firstname,
-                            lastname: lastname,
-                            nickname: nickname,
-                            birthdate: birthdate
-                        }
-                    ]);
-
-                if (profileError) {
-                    console.warn('Ошибка сохранения профиля в таблицу:', profileError.message);
-                }
-                
-                alert('Аккаунт успешно создан и активирован!');
-                goToStep('feed'); 
-            } else {
-                alert('Ошибка: сервер не вернул сессию пользователя.');
-            }
-            
-            continueBtn.innerText = 'Продолжить';
-        }
-
-        // Подтверждение OTP / Email-кода на Шаге 3 (Остается как резервный метод)
-        async function verifyEmailCode() {
-            alert('Регистрация успешно подтверждена!');
-            goToStep('feed');
-        }
-
-        // ================= БЭКЕНД: ЛЕНТА И ПУБЛИКАЦИЯ ПОСТОВ =================
-        async function publishPost() {
-            const textContent = document.getElementById('postText').value.trim();
-            const fileInput = document.getElementById('postFileInput');
-            const submitBtn = document.getElementById('publishSubmitBtn');
-            const file = fileInput.files[0];
-            let uploadedImageUrl = null;
-
-            if (!textContent && !file) {
-                alert('Напишите текст или выберите фото для публикации!');
-                return;
-            }
-
-            // Переключаем текст кнопки и блокируем её
-            submitBtn.innerText = 'Публикация...';
-            submitBtn.disabled = true;
-
-            // Если сессии нет, используем дефолтный uuid (чтобы избежать ошибок бэкенда)
-            const authorId = currentUser ? currentUser.id : '00000000-0000-0000-0000-000000000000';
-
+        function decryptData(cipher, key) {
             try {
-                if (file) {
-                    const fileExt = file.name.split('.').pop();
-                    const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-                    const filePath = `${authorId}/${fileName}`;
-
-                    const { data: storageData, error: storageError } = await clientSupabase.storage
-                        .from('post-images')
-                        .upload(filePath, file);
-
-                    if (storageError) {
-                        throw new Error('ошибка загрузки: failed to fetch (' + storageError.message + ')');
-                    }
-
-                    const { data: publicUrlData } = clientSupabase.storage
-                        .from('post-images')
-                        .getPublicUrl(filePath);
-
-                    uploadedImageUrl = publicUrlData.publicUrl;
-                }
-
-                const { error: postError } = await clientSupabase
-                    .from('posts')
-                    .insert({
-                        user_id: authorId,
-                        text: textContent,
-                        image_url: uploadedImageUrl
-                    });
-
-                if (postError) {
-                    throw new Error(postError.message);
-                }
-
-                // Успешно: сбрасываем форму публикации
-                document.getElementById('postText').value = '';
-                fileInput.value = '';
-                document.getElementById('filePreview').style.display = 'none';
-                
-                // Возвращаем исходный вид кнопке перед уходом
-                submitBtn.innerText = 'Опубликовать';
-                submitBtn.disabled = false;
-
-                goToStep('feed');
-
-            } catch (error) {
-                alert('Ошибка публикации поста: ' + error.message);
-                
-                // Сбой: моментально восстанавливаем кнопку и возвращаем надпись
-                submitBtn.innerText = 'Опубликовать';
-                submitBtn.disabled = false;
+                const secureKey = CryptoJS.HmacSHA256(key, APP_CRYPTO_SECRET).toString();
+                const bytes = CryptoJS.AES.decrypt(cipher, secureKey);
+                return bytes.toString(CryptoJS.enc.Utf8);
+            } catch(e) {
+                return "[Ошибка дешифрования]";
             }
         }
 
-        async function loadFeedPosts() {
-            const postsContainer = document.getElementById('postsContainer');
-            postsContainer.innerHTML = '<p style="text-align:center; color:#a0a0a0; font-weight:300; padding: 20px 0;">Загрузка постов...</p>';
+        function getVerifiedBadge(verified) {
+            return verified ? `<span class="material-symbols-rounded verified-badge-icon">verified</span>` : '';
+        }
 
-            const { data: posts, error: postsError } = await clientSupabase
-                .from('posts')
-                .select('*')
-                .order('created_at', { ascending: false });
+        // НАВИГАЦИОННАЯ СИСТЕМА
+        const screens = {
+            auth: document.getElementById('auth-screen'),
+            register: document.getElementById('register-screen'),
+            chats: document.getElementById('chats-screen'),
+            createChat: document.getElementById('create-chat-screen'),
+            chatWindow: document.getElementById('chat-window-screen')
+        };
 
-            if (postsError) {
-                postsContainer.innerHTML = '<p style="text-align:center; color:#ff0000; font-weight:300; padding: 20px 0;">Ошибка загрузки: ' + postsError.message + '</p>';
-                return;
+        function changeScreen(target) {
+            Object.keys(screens).forEach(k => screens[k]?.classList.remove('active'));
+            screens[target]?.classList.add('active');
+        }
+
+        const subs = {
+            chats: document.getElementById('view-chats-sub'),
+            calls: document.getElementById('view-calls-sub'),
+            admin: document.getElementById('view-admin-sub'),
+            settings: document.getElementById('view-settings-sub')
+        };
+        const navItems = {
+            chats: document.getElementById('nav-item-chats'),
+            calls: document.getElementById('nav-item-calls'),
+            admin: document.getElementById('nav-item-admin'),
+            settings: document.getElementById('nav-item-settings')
+        };
+
+        function switchSubView(target) {
+            Object.keys(subs).forEach(k => {
+                subs[k]?.classList.remove('active');
+                navItems[k]?.classList.remove('active');
+            });
+            subs[target]?.classList.add('active');
+            navItems[target]?.classList.add('active');
+        }
+
+        navItems.chats.onclick = () => switchSubView('chats');
+        navItems.calls.onclick = () => switchSubView('calls');
+        navItems.admin.onclick = () => switchSubView('admin');
+        navItems.settings.onclick = () => switchSubView('settings');
+
+        // ВХОД И РЕГИСТРАЦИЯ
+        document.getElementById('btn-go-register').onclick = () => changeScreen('register');
+        document.getElementById('btn-go-login').onclick = () => changeScreen('auth');
+
+        document.getElementById('btn-register').onclick = async () => {
+            const name = document.getElementById('reg-name').value.trim();
+            const username = document.getElementById('reg-username').value.trim().toLowerCase();
+            const pass = document.getElementById('reg-password').value.trim();
+            const avatar = document.getElementById('reg-avatar').value.trim();
+
+            if (!name || !username || !pass) return alert("Заполните все обязательные поля!");
+
+            const userRef = doc(db, "users", username);
+            const userSnap = await getDoc(userRef);
+            if (userSnap.exists()) return alert("Этот юзернейм уже занят!");
+
+            const uid = "u_" + Math.random().toString(36).substring(2, 11);
+            const newUser = { uid, name, username, password: pass, avatar: avatar || '', role: 'user', verified: false };
+            await setDoc(userRef, newUser);
+            alert("Регистрация успешна!");
+            changeScreen('auth');
+        };
+
+        document.getElementById('btn-login').onclick = async () => {
+            const username = document.getElementById('auth-username').value.trim().toLowerCase();
+            const pass = document.getElementById('auth-password').value.trim();
+
+            const userSnap = await getDoc(doc(db, "users", username));
+            if (!userSnap.exists() || userSnap.data().password !== pass) {
+                return alert("Неверный логин или пароль!");
             }
 
-            if (!posts || posts.length === 0) {
-                postsContainer.innerHTML = '<p style="text-align:center; color:#a0a0a0; font-weight:300; padding: 20px 0;">Постов пока нет. Будьте первым!</p>';
-                return;
+            myProfile = userSnap.data();
+            initAppSession();
+        };
+
+        function initAppSession() {
+            document.getElementById('settings-my-name').innerHTML = myProfile.name + getVerifiedBadge(myProfile.verified);
+            document.getElementById('settings-my-username').textContent = "@" + myProfile.username;
+            if(myProfile.avatar) document.getElementById('settings-my-avatar').src = myProfile.avatar;
+
+            if (myProfile.role === 'admin') {
+                document.getElementById('nav-item-admin').classList.remove('hidden');
+                initAdminPanel();
             }
 
-            postsContainer.innerHTML = '';
+            listenToChats();
+            loadStatuses();
+            listenToIncomingCalls();
+            loadCallsHistory();
+            initWebPushManager();
 
-            for (const post of posts) {
-                let authorName = 'User_' + post.user_id.substring(0, 5);
-                
-                // Безопасный запрос лайков
-                const { count: likesCount } = await clientSupabase
-                    .from('likes')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('post_id', post.id);
+            changeScreen('chats');
+        }
 
-                // Безопасный запрос комментариев
-                const { data: comments } = await clientSupabase
-                    .from('comments')
-                    .select('*')
-                    .eq('post_id', post.id)
-                    .order('created_at', { ascending: true });
+        document.getElementById('btn-logout').onclick = () => {
+            myProfile = null;
+            location.reload();
+        };
 
-                let commentsHTML = '';
-                if (comments && comments.length > 0) {
-                    comments.forEach(com => {
-                        commentsHTML += `
-                            <div class="comment-item">
-                                <span class="comment-user">User_${com.user_id.substring(0, 4)}:</span> ${com.text}
-                            </div>
-                        `;
-                    });
+        // НАСТРОЙКА PWA ПУШ-УВЕДОМЛЕНИЙ ДЛЯ ANDROID И IOS
+        async function initWebPushManager() {
+            if (!messaging) return;
+            // Прослушивание пушей на переднем плане
+            onMessage(messaging, (payload) => {
+                console.log("Получен пуш на переднем плане: ", payload);
+                if(payload.notification) {
+                    // Можно вызвать локальный баннер, если нужно
                 }
+            });
+        }
 
-                const card = document.createElement('div');
-                card.className = 'post-card';
-                card.innerHTML = `
-                    <div class="post-author-row">
-                        <div class="author-info">
-                            <div class="author-avatar"></div>
-                            <span class="author-name">${authorName}</span>
-                        </div>
-                        <button class="btn-subscribe" onclick="alert('Подписка оформлена')">подписаться</button>
-                    </div>
-                    
-                    ${post.text ? `<p class="post-text">${post.text}</p>` : ''}
-                    ${post.image_url ? `<img src="${post.image_url}" class="post-image" alt="Изображение">` : ''}
-                    
-                    <div class="post-actions">
-                        <div class="action-item" onclick="toggleLike('${post.id}')">
-                            ❤️ <span id="like-count-${post.id}">${likesCount || 0}</span>
-                        </div>
-                        <div class="action-item">
-                            💬 <span>${comments ? comments.length : 0}</span>
-                        </div>
-                    </div>
+        document.getElementById('btn-activate-push').onclick = async () => {
+            if (!messaging) return alert("Пуш-уведомления не поддерживаются на этом устройстве.");
+            try {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    const token = await getToken(messaging, { vapidKey: VAPID_KEY });
+                    if (token) {
+                        await updateDoc(doc(db, "users", myProfile.username), { fcmToken: token });
+                        alert("PWA пуш-уведомления успешно активированы!");
+                    } else {
+                        alert("Не удалось получить токен.");
+                    }
+                } else {
+                    alert("Доступ к уведомлениям заблокирован.");
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Ошибка активации: " + e.message);
+            }
+        };
 
-                    <div class="comments-section">
-                        <div id="comments-list-${post.id}">${commentsHTML}</div>
-                        <div class="comment-input-row">
-                            <input type="text" id="com-input-${post.id}" placeholder="Оставьте комментарий...">
-                            <button onclick="addComment('${post.id}')">Отправить</button>
+        // ЗАЯВКА НА ВЕРИФИКАЦИЮ (С ПРИЧИНОЙ)
+        document.getElementById('btn-request-verification').onclick = async () => {
+            const reason = prompt("Укажите причину для верификации (зачем она вам нужна):");
+            if (reason === null) return;
+            if (!reason.trim()) return alert("Причина обязательна для заполнения!");
+
+            await setDoc(doc(db, "verification_requests", myProfile.username), {
+                uid: myProfile.uid,
+                name: myProfile.name,
+                username: myProfile.username,
+                reason: reason.trim(),
+                createdAt: serverTimestamp()
+            });
+            alert("Заявка успешно отправлена админу!");
+        };
+
+        // АДМИН-ФУНКЦИИ
+        function initAdminPanel() {
+            onSnapshot(collection(db, "verification_requests"), (snap) => {
+                const root = document.getElementById('admin-requests-root');
+                root.innerHTML = '';
+                if(snap.empty) root.innerHTML = '<p style="padding:16px; opacity:0.5;">Нет активных заявок</p>';
+                
+                snap.forEach((docSnap) => {
+                    const req = docSnap.data();
+                    const card = document.createElement('div');
+                    card.className = 'admin-req-card';
+                    card.innerHTML = `
+                        <div>
+                            <strong>${req.name}</strong> (@${req.username})
+                            <p style="font-size:13px; margin-top:4px; color:var(--md-on-surface-variant);"><strong>Причина:</strong> ${req.reason || 'Не указана'}</p>
                         </div>
+                        <div style="display:flex; gap:8px;">
+                            <button class="m3-btn m3-btn-filled" style="flex:1; height:36px; border-radius:8px;" id="approve-${req.username}">Одобрить</button>
+                            <button class="m3-btn m3-btn-error" style="flex:1; height:36px; border-radius:8px;" id="reject-${req.username}">Отклонить</button>
+                        </div>
+                    `;
+                    root.appendChild(card);
+
+                    document.getElementById(`approve-${req.username}`).onclick = async () => {
+                        await updateDoc(doc(db, "users", req.username), { verified: true });
+                        await deleteDoc(doc(db, "verification_requests", req.username));
+                    };
+                    document.getElementById(`reject-${req.username}`).onclick = async () => {
+                        await deleteDoc(doc(db, "verification_requests", req.username));
+                    };
+                });
+            });
+
+            document.getElementById('btn-admin-revoke').onclick = async () => {
+                const targetUser = document.getElementById('admin-revoke-username').value.trim().toLowerCase();
+                if(!targetUser) return alert("Введите юзернейм!");
+                
+                const uRef = doc(db, "users", targetUser);
+                const uSnap = await getDoc(uRef);
+                if(!uSnap.exists()) return alert("Пользователь не найден!");
+                
+                await updateDoc(uRef, { verified: false });
+                alert(`Галочка у @${targetUser} успешно отобрана!`);
+                document.getElementById('admin-revoke-username').value = '';
+            };
+        }
+
+        // ПОИСК И СОЗДАНИЕ ЧАТА
+        document.getElementById('fab-create-chat').onclick = () => {
+            changeScreen('createChat');
+            document.getElementById('search-username').value = '';
+            document.getElementById('search-results').innerHTML = '';
+        };
+        document.getElementById('back-to-chats').onclick = () => changeScreen('chats');
+
+        document.getElementById('search-username').oninput = async (e) => {
+            const term = e.target.value.trim().toLowerCase();
+            const resDiv = document.getElementById('search-results');
+            if(term.length < 2) { resDiv.innerHTML = ''; return; }
+
+            const s = await getDocs(query(collection(db, "users"), where("username", ">=", term), where("username", "<=", term + '\uf8ff')));
+            resDiv.innerHTML = '';
+            s.forEach(udoc => {
+                const u = udoc.data();
+                if(u.uid === myProfile.uid) return;
+
+                const row = document.createElement('div');
+                row.className = 'chat-row';
+                row.innerHTML = `
+                    <img class="avatar" src="${u.avatar || 'https://via.placeholder.com/150'}">
+                    <div class="chat-row-info">
+                        <h4>${u.name}${getVerifiedBadge(u.verified)}</h4>
+                        <p>@${u.username}</p>
                     </div>
                 `;
-                postsContainer.appendChild(card);
-            }
-        }
-
-        async function toggleLike(postId) {
-            const authorId = currentUser ? currentUser.id : '00000000-0000-0000-0000-000000000000';
-
-            const { data: existingLike } = await clientSupabase
-                .from('likes')
-                .select('*')
-                .eq('post_id', postId)
-                .eq('user_id', authorId)
-                .single();
-
-            if (existingLike) {
-                await clientSupabase.from('likes').delete().eq('id', existingLike.id);
-            } else {
-                await clientSupabase.from('likes').insert({ post_id: postId, user_id: authorId });
-            }
-            
-            const { count: currentLikes } = await clientSupabase
-                .from('likes')
-                .select('*', { count: 'exact', head: true })
-                .eq('post_id', postId);
-                
-            document.getElementById(`like-count-${postId}`).innerText = currentLikes || 0;
-        }
-
-        async function addComment(postId) {
-            const input = document.getElementById(`com-input-${postId}`);
-            const text = input.value.trim();
-            if (!text) return;
-
-            const authorId = currentUser ? currentUser.id : '00000000-0000-0000-0000-000000000000';
-
-            const { error } = await clientSupabase
-                .from('comments')
-                .insert({
-                    post_id: postId,
-                    user_id: authorId,
-                    text: text
-                });
-
-            if (error) {
-                alert('Ошибка комментария: ' + error.message);
-            } else {
-                input.value = '';
-                loadFeedPosts();
-            }
-        }
-
-        // Обработка клика по кнопке продолжить
-        function handleContinue() {
-            if (!continueBtn.classList.contains('ready')) return;
-
-            if (currentAppState === 'login') {
-                loginUserInSupabase();
-            } else if (currentAppState === 1) {
-                const emailVal = document.getElementById('email').value.trim();
-                document.getElementById('codeSentDesc').innerText = `код отправлен на email: ${emailVal}`;
-                goToStep(2);
-            } else if (currentAppState === 2) {
-                registerUserInSupabase();
-            } else if (currentAppState === 3) {
-                verifyEmailCode();
-            }
-        }
-
-        // Логика кнопки Назад
-        function handleBack() {
-            if (currentAppState === 'login' || currentAppState === 1) {
-                goToStep('welcome');
-            } else if (currentAppState === 2) {
-                goToStep(1);
-            } else if (currentAppState === 3) {
-                goToStep(2);
-            }
-        }
-
-        // Запуск проверки сессии при загрузке страницы
-        window.onload = function() {
-            updateDecorPositions(0, 0);
-            checkActiveUserSession();
+                row.onclick = () => openPersonalChatWindow(u);
+                resDiv.appendChild(row);
+            });
         };
+
+        // ЛОГИКА ОКНА ЧАТА И ПОДПИСКИ НА СООБЩЕНИЯ
+        let unsubMessages = null;
+
+        function openPersonalChatWindow(targetUser) {
+            currentChatUser = targetUser;
+            currentChatId = myProfile.uid < targetUser.uid ? `${myProfile.uid}_${targetUser.uid}` : `${targetUser.uid}_${myProfile.uid}`;
+            
+            document.getElementById('chat-header-title').innerHTML = targetUser.name + getVerifiedBadge(targetUser.verified);
+            document.getElementById('messages-root').innerHTML = '';
+            document.getElementById('invite-send-overlay').classList.add('hidden');
+            
+            changeScreen('chatWindow');
+
+            if(unsubMessages) unsubMessages();
+
+            // Проверка закрытого профиля
+            onSnapshot(doc(db, "chats", currentChatId), (chatSnap) => {
+                const chatData = chatSnap.data();
+                if(!chatData || chatData.status === 'pending') {
+                    if(chatData && chatData.senderId === myProfile.uid) {
+                        document.getElementById('invite-send-overlay').innerHTML = `<h3>Запрос отправлен</h3><p>Ожидайте подтверждения от пользователя.</p>`;
+                    } else if (chatData && chatData.senderId !== myProfile.uid) {
+                        document.getElementById('invite-send-overlay').innerHTML = `<h3>Вам отправлен запрос</h3><button class="m3-btn m3-btn-filled" id="btn-accept-chat-inv">Принять диалог</button>`;
+                        document.getElementById('btn-accept-chat-inv').onclick = async () => {
+                            await updateDoc(doc(db, "chats", currentChatId), { status: 'active' });
+                        };
+                    }
+                    document.getElementById('invite-send-overlay').classList.remove('hidden');
+                }
+            });
+
+            document.getElementById('btn-send-invite').onclick = async () => {
+                await setDoc(doc(db, "chats", currentChatId), {
+                    participants: [myProfile.uid, currentChatUser.uid],
+                    status: 'pending',
+                    senderId: myProfile.uid,
+                    updatedAt: serverTimestamp()
+                });
+            };
+
+            const msgQuery = query(collection(db, "chats", currentChatId, "messages"), orderBy("createdAt", "asc"));
+            unsubMessages = onSnapshot(msgQuery, (snap) => {
+                const root = document.getElementById('messages-root');
+                root.innerHTML = '';
+                snap.forEach(mdoc => {
+                    const msg = mdoc.data();
+                    const isMe = msg.senderId === myProfile.uid;
+                    const decryptedText = decryptData(msg.payload, currentChatId);
+
+                    const wrapper = document.createElement('div');
+                    wrapper.className = `msg-wrapper ${isMe ? 'me' : 'other'}`;
+                    
+                    let mediaHTML = '';
+                    if (msg.type === 'image') {
+                        mediaHTML = `<img src="${decryptedText}">`;
+                    } else if (msg.type === 'voice') {
+                        mediaHTML = `<audio class="audio-player" src="${decryptedText}" controls playsinline></audio>`;
+                    } else {
+                        mediaHTML = `<span>${decryptedText}</span>`;
+                    }
+
+                    // Вычисление времени отправки
+                    let timeString = '';
+                    if (msg.createdAt) {
+                        const date = msg.createdAt.toDate();
+                        timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    }
+
+                    wrapper.innerHTML = `
+                        <div class="bubble">
+                            ${mediaHTML}
+                            <span class="bubble-time">${timeString}</span>
+                        </div>
+                    `;
+                    root.appendChild(wrapper);
+                });
+                document.getElementById('messages-scroller').scrollTop = document.getElementById('messages-scroller').scrollHeight;
+            });
+        }
+
+        document.getElementById('back-from-chat').onclick = () => {
+            if(unsubMessages) unsubMessages();
+            changeScreen('chats');
+        };
+
+        // ОТПРАВКА СOОБЩЕНИЙ
+        const msgInput = document.getElementById('message-input');
+        const sendBtn = document.getElementById('send-btn');
+        const voiceBtn = document.getElementById('voice-record-btn');
+
+        msgInput.oninput = () => {
+            if (msgInput.value.trim().length > 0) {
+                sendBtn.classList.remove('hidden');
+                voiceBtn.classList.add('hidden');
+            } else {
+                sendBtn.classList.add('hidden');
+                voiceBtn.classList.remove('hidden');
+            }
+        };
+
+        async function sendPayload(type, rawData) {
+            const encrypted = encryptData(rawData, currentChatId);
+            await setDoc(doc(db, "chats", currentChatId), {
+                participants: [myProfile.uid, currentChatUser.uid],
+                status: 'active',
+                lastMessage: encryptData(type === 'text' ? rawData : `[${type}]`, currentChatId),
+                updatedAt: serverTimestamp()
+            }, { merge: true });
+
+            await addDoc(collection(db, "chats", currentChatId, "messages"), {
+                senderId: myProfile.uid,
+                type: type,
+                payload: encrypted,
+                createdAt: serverTimestamp()
+            });
+        }
+
+        sendBtn.onclick = () => {
+            const t = msgInput.value.trim();
+            if(t) {
+                sendPayload('text', t);
+                msgInput.value = '';
+                sendBtn.classList.add('hidden');
+                voiceBtn.classList.remove('hidden');
+            }
+        };
+
+        // МЕДИА-ВЛОЖЕНИЯ
+        document.getElementById('attach-btn').onclick = () => document.getElementById('file-input').click();
+        document.getElementById('file-input').onchange = async (e) => {
+            const file = e.target.files[0];
+            if(!file) return;
+            const r = new FileReader();
+            r.onload = async () => {
+                await sendPayload('image', r.result);
+            };
+            r.readAsDataURL(file);
+        };
+
+        // ИСПРАВЛЕНИЕ ЗАПИСИ ГОЛOСОВЫХ НА МОБИЛЬНЫХ УСТРОЙСТВАХ (iOS / Android WebView)
+        let mediaRecorder = null;
+        let voiceChunks = [];
+        
+        voiceBtn.onclick = async () => {
+            initAudioContext();
+            if(mediaRecorder && mediaRecorder.state === "recording") {
+                mediaRecorder.stop();
+                voiceBtn.classList.remove('recording');
+                voiceBtn.innerHTML = `<span class="material-symbols-rounded">mic</span>`;
+                return;
+            }
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                voiceChunks = [];
+                
+                // Динамический выбор поддерживаемого кодека (Фикс под iOS Safari/WebView)
+                let recorderOptions = {};
+                if (MediaRecorder.isTypeSupported('audio/mp4')) {
+                    recorderOptions = { mimeType: 'audio/mp4' };
+                } else if (MediaRecorder.isTypeSupported('audio/aac')) {
+                    recorderOptions = { mimeType: 'audio/aac' };
+                } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+                    recorderOptions = { mimeType: 'audio/webm' };
+                }
+
+                mediaRecorder = new MediaRecorder(stream, recorderOptions);
+                mediaRecorder.ondataavailable = (e) => { if(e.data.size > 0) voiceChunks.push(e.data); };
+                
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(voiceChunks, { type: recorderOptions.mimeType || 'audio/webm' });
+                    stream.getTracks().forEach(t => t.stop());
+                    
+                    const reader = new FileReader();
+                    reader.onloadend = async () => {
+                        await sendPayload('voice', reader.result);
+                    };
+                    reader.readAsDataURL(audioBlob);
+                };
+
+                mediaRecorder.start();
+                voiceBtn.classList.add('recording');
+                voiceBtn.innerHTML = `<span class="material-symbols-rounded">stop</span>`;
+            } catch(err) {
+                alert("Ошибка доступа к микрофону: " + err.message);
+            }
+        };
+
+        // ПОДПИСКА НА ЧАТЫ И СБОР ТЕКУЩИХ СОБЕСЕДНИКОВ
+        async function listenToChats() {
+            const qChats = query(collection(db, "chats"), where("participants", "arrayContains", myProfile.uid), orderBy("updatedAt", "desc"));
+            onSnapshot(qChats, async (snap) => {
+                const container = document.getElementById('chats-list-container');
+                container.innerHTML = '';
+                activeChatUserIds.clear();
+
+                if(snap.empty) {
+                    container.innerHTML = `<p style="text-align:center; padding:40px; opacity:0.4;">У вас пока нет активных диалогов</p>`;
+                }
+
+                for (const cdoc of snap.docs) {
+                    const chat = cdoc.data();
+                    const otherUid = chat.participants.find(p => p !== myProfile.uid);
+                    if(!otherUid) continue;
+                    
+                    activeChatUserIds.add(otherUid);
+
+                    const uSnap = await getDocs(query(collection(db, "users"), where("uid", "==", otherUid)));
+                    if(uSnap.empty) continue;
+                    const uData = uSnap.docs[0].data();
+
+                    const lastMsgDecrypted = chat.lastMessage ? decryptData(chat.lastMessage, cdoc.id) : 'Диалог создан';
+
+                    const row = document.createElement('div');
+                    row.className = 'chat-row';
+                    row.innerHTML = `
+                        <img class="avatar" src="${uData.avatar || 'https://via.placeholder.com/150'}">
+                        <div class="chat-row-info">
+                            <h4>${uData.name}${getVerifiedBadge(uData.verified)}</h4>
+                            <p>${lastMsgDecrypted}</p>
+                        </div>
+                    `;
+                    row.onclick = () => openPersonalChatWindow(uData);
+                    container.appendChild(row);
+                }
+            });
+        }
+
+        // СТАТУСЫ С УДАЛЕНИЕМ ЧЕРЕЗ 30 МИНУТ И ФИЛЬТРАЦИЕЙ ПО ЧАТАМ + СГОРАНИЕ ПОСЛЕ ПРОСМОТРА
+        async function loadStatuses() {
+            const statusDiv = document.getElementById('status-bar-container');
+            
+            onSnapshot(collection(db, "statuses"), (snap) => {
+                statusDiv.innerHTML = `
+                    <div class="status-item add-new" id="btn-add-status">
+                        <div class="status-avatar-wrapper"><span class="material-symbols-rounded">add</span></div>
+                        <span class="status-name">Мой статус</span>
+                    </div>
+                `;
+                document.getElementById('btn-add-status').onclick = () => document.getElementById('status-file-input').click();
+                
+                const now = Date.now();
+                snap.forEach(async (docSnap) => {
+                    const data = docSnap.data();
+                    const createdTime = data.createdAt ? data.createdAt.toDate().getTime() : now;
+                    
+                    // Удаление по истечении 30 минут
+                    if (now - createdTime > 30 * 60 * 1000) {
+                        await deleteDoc(doc(db, "statuses", docSnap.id));
+                        return;
+                    }
+
+                    // ОГРАНИЧЕНИЕ ПРОСМОТРА: Видит только сам автор, ИЛИ те, у кого есть активный чат с автором
+                    if(data.uid !== myProfile.uid && !activeChatUserIds.has(data.uid)) {
+                        return; 
+                    }
+
+                    // ФИКС ОДНОКРАТНОГО ПРОСМОТРА: Если текущий юзер уже смотрел — скрываем
+                    if (data.viewedBy && data.viewedBy.includes(myProfile.uid)) {
+                        return;
+                    }
+
+                    const el = document.createElement('div');
+                    el.className = 'status-item';
+                    el.innerHTML = `
+                        <div class="status-avatar-wrapper"><img class="status-avatar" src="${data.avatar || 'https://via.placeholder.com/150'}"></div>
+                        <span class="status-name">${data.name}</span>
+                    `;
+                    el.onclick = () => openStatusViewer(data, docSnap.id);
+                    statusDiv.appendChild(el);
+                });
+            });
+        }
+
+        document.getElementById('status-file-input').onchange = async (e) => {
+            const file = e.target.files[0];
+            if(!file) return;
+            const r = new FileReader();
+            r.onload = async () => {
+                await addDoc(collection(db, "statuses"), {
+                    uid: myProfile.uid,
+                    name: myProfile.name,
+                    avatar: myProfile.avatar || '',
+                    media: r.result,
+                    viewedBy: [],
+                    createdAt: serverTimestamp()
+                });
+                alert("Статус опубликован на 30 минут!");
+            };
+            r.readAsDataURL(file);
+        };
+
+        let statusTimer = null;
+        function openStatusViewer(data, docId) {
+            const modal = document.getElementById('status-viewer-modal');
+            const bar = document.getElementById('status-progress-fill');
+            
+            document.getElementById('status-viewer-username').textContent = data.name;
+            document.getElementById('status-viewer-img').src = data.media;
+            
+            modal.classList.add('active');
+            bar.style.width = '0%';
+            
+            setTimeout(() => { bar.style.width = '100%'; }, 50);
+
+            statusTimer = setTimeout(async () => {
+                closeStatus(docId);
+            }, 30000);
+
+            document.getElementById('btn-close-status').onclick = () => {
+                clearTimeout(statusTimer);
+                closeStatus(docId);
+            };
+        }
+
+        async function closeStatus(docId) {
+            document.getElementById('status-viewer-modal').classList.remove('active');
+            // Добавляем во Firestore отметку о просмотре, чтобы статус исчез навсегда для этого пользователя
+            if(docId) {
+                await updateDoc(doc(db, "statuses", docId), {
+                    viewedBy: arrayUnion(myProfile.uid)
+                });
+            }
+        }
+
+        // --- МОЩНЫЙ ИНТЕГРИРОВАННЫЙ WEBRTC ДВИЖОК ЗВОНКОВ С АВТООТБОЕМ В 30 СЕКУНД И ЖУРНАЛОМ ---
+        const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+
+        async function initMedia(withVideo) {
+            const constr = { audio: true, video: withVideo ? { facingMode: isFrontCam ? "user" : "environment" } : false };
+            localStream = await navigator.mediaDevices.getUserMedia(constr);
+            peerConnection = new RTCPeerConnection(rtcConfig);
+            
+            localStream.getTracks().forEach(t => peerConnection.addTrack(t, localStream));
+            
+            if(withVideo) {
+                document.getElementById('video-layer').classList.remove('hidden');
+                document.getElementById('local-video').srcObject = localStream;
+                document.getElementById('flip-cam-btn').classList.remove('hidden');
+                document.getElementById('toggle-video-btn').classList.remove('hidden');
+            } else {
+                document.getElementById('video-layer').classList.add('hidden');
+                document.getElementById('flip-cam-btn').classList.add('hidden');
+                document.getElementById('toggle-video-btn').classList.add('hidden');
+            }
+
+            peerConnection.ontrack = (e) => {
+                document.getElementById('remote-video').srcObject = e.streams[0];
+            };
+        }
+
+        // Отправка кастомного фонового пуш-уведомления (симуляция через структуру вызовов Firestore)
+        async function triggerFCMCallPush(targetUser, callType) {
+            if(!targetUser.fcmToken) return;
+            
+            // Если у вас подключен Firebase Cloud Functions / Backend Endpoint, отправляем запрос туда:
+            // В рамках PWA, когда приложение свернуто, мы пишем в коллекцию "push_queue", 
+            // откуда Cloud Function рассылает нативные заголовки на Android/iOS.
+            try {
+                await addDoc(collection(db, "push_queue"), {
+                    toToken: targetUser.fcmToken,
+                    title: callType === 'video' ? "Входящий видеовызов" : "Входящий аудиовызов",
+                    body: `Звонит ${myProfile.name}`,
+                    data: { callerUsername: myProfile.username, type: callType }
+                });
+            } catch(e) { console.log("Push trigger error: ", e); }
+        }
+
+        async function makeCall(withVideo) {
+            initAudioContext();
+            await initMedia(withVideo);
+            isCallActive = false;
+
+            currentCallId = "call_" + Math.random().toString(36).substring(2, 11);
+            
+            document.getElementById('call-screen-name').textContent = currentChatUser.name;
+            document.getElementById('call-screen-avatar').src = currentChatUser.avatar || 'https://via.placeholder.com/150';
+            document.getElementById('call-status-label').textContent = "Вызов...";
+            document.getElementById('accept-call-btn').classList.add('hidden');
+            document.getElementById('call-screen').classList.add('active');
+
+            playCoolRingtone(false); // Включаем исходящие гудки
+
+            // Логируем вызов в историю как исходящий по умолчанию
+            await setDoc(doc(db, "calls_history", currentCallId), {
+                id: currentCallId,
+                callerId: myProfile.uid,
+                callerName: myProfile.name,
+                receiverId: currentChatUser.uid,
+                receiverName: currentChatUser.name,
+                type: withVideo ? 'video' : 'audio',
+                status: 'missed', // поменяется на answered при успехе
+                createdAt: serverTimestamp()
+            });
+
+            // Триггерим пуш уведомление для PWA
+            triggerFCMCallPush(currentChatUser, withVideo ? 'video' : 'audio');
+
+            const callRef = doc(db, "webrtc_calls", currentCallId);
+
+            peerConnection.onicecandidate = (e) => {
+                if(e.candidate) addDoc(collection(callRef, "callerCandidates"), e.candidate.toJSON());
+            };
+
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+
+            await setDoc(callRef, {
+                offer: { type: offer.type, sdp: offer.sdp },
+                status: 'dialing',
+                type: withVideo ? 'video' : 'audio',
+                callerName: myProfile.name,
+                callerAvatar: myProfile.avatar || ''
+            });
+
+            // ТАЙМАУТ АВТООТБОЯ ЧЕРЕЗ 30 СЕКУНД (Пункт 14)
+            activeCallTimer = setTimeout(async () => {
+                const snap = await getDoc(callRef);
+                if (snap.exists() && snap.data().status !== 'connected') {
+                    await updateDoc(callRef, { status: 'no_answer' });
+                    await updateDoc(doc(db, "calls_history", currentCallId), { status: 'missed' });
+                    cleanCallResources("Нет ответа");
+                }
+            }, 30000);
+
+            // Слушаем ответ
+            onSnapshot(callRef, async (callSnap) => {
+                const data = callSnap.data();
+                if(!data) return;
+
+                if (data.answer && !peerConnection.currentRemoteDescription) {
+                    clearTimeout(activeCallTimer);
+                    isCallActive = true;
+                    stopRingtone();
+                    document.getElementById('call-status-label').textContent = "Разговор";
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+                    await updateDoc(doc(db, "calls_history", currentCallId), { status: 'answered' });
+                }
+
+                if (data.status === 'ended' || data.status === 'declined' || data.status === 'no_answer') {
+                    clearTimeout(activeCallTimer);
+                    cleanCallResources(data.status === 'no_answer' ? "Нет ответа" : "Звонок завершен");
+                }
+            });
+
+            onSnapshot(collection(callRef, "receiverCandidates"), (snap) => {
+                snap.forEach(change => {
+                    if(change.type === 'added') peerConnection.addIceCandidate(new RTCIceCandidate(change.doc.data()));
+                });
+            });
+        }
+
+        document.getElementById('btn-start-voice-call').onclick = () => makeCall(false);
+        document.getElementById('btn-start-video-call').onclick = () => makeCall(true);
+
+        // СЛУШАТЕЛЬ ВХОДЯЩИХ ВЫЗОВОВ
+        function listenToIncomingCalls() {
+            onSnapshot(collection(db, "webrtc_calls"), (snap) => {
+                snap.forEach(async (change) => {
+                    // Ищем активный входящий вызов к нам по ID из истории или по сигнальной логике
+                    const callData = change.data();
+                    if(!callData || callData.status !== 'dialing') return;
+                    
+                    // Чтобы узнать, нам ли звонят, проверяем историю вызовов
+                    const hSnap = await getDoc(doc(db, "calls_history", change.id));
+                    if(hSnap.exists() && hSnap.data().receiverId === myProfile.uid) {
+                        currentCallId = change.id;
+                        showIncomingCallUI(callData);
+                    }
+                });
+            });
+        }
+
+        function showIncomingCallUI(data) {
+            initAudioContext();
+            playCoolRingtone(true); // Крутой входящий рингтон
+
+            document.getElementById('call-screen-name').textContent = data.callerName;
+            document.getElementById('call-screen-avatar').src = data.callerAvatar || 'https://via.placeholder.com/150';
+            document.getElementById('call-status-label').textContent = `Входящий ${data.type === 'video' ? 'видео' : 'аудио'} вызов`;
+            
+            document.getElementById('accept-call-btn').classList.remove('hidden');
+            document.getElementById('call-screen').classList.add('active');
+
+            // Автоотбой на стороне получателя, если звонящий сбросил по таймауту
+            const callRef = doc(db, "webrtc_calls", currentCallId);
+            const unsubIncoming = onSnapshot(callRef, (docSnap) => {
+                const d = docSnap.data();
+                if(!d || d.status === 'no_answer' || d.status === 'ended' || d.status === 'declined') {
+                    unsubIncoming();
+                    cleanCallResources(d?.status === 'no_answer' ? "Нет ответа" : "Вызов завершен");
+                }
+            });
+        }
+
+        document.getElementById('accept-call-btn').onclick = async () => {
+            stopRingtone();
+            document.getElementById('accept-call-btn').classList.add('hidden');
+            document.getElementById('call-status-label').textContent = "Установление соединения...";
+
+            const callRef = doc(db, "webrtc_calls", currentCallId);
+            const callSnap = await getDoc(callRef);
+            const callData = callSnap.data();
+
+            await initMedia(callData.type === 'video');
+
+            peerConnection.onicecandidate = (e) => {
+                if(e.candidate) addDoc(collection(callRef, "receiverCandidates"), e.candidate.toJSON());
+            };
+
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(callData.offer));
+            const answer = await peerConnection.createAnswer();
+            await peerConnection.setLocalDescription(answer);
+
+            await updateDoc(callRef, {
+                answer: { type: answer.type, sdp: answer.sdp },
+                status: 'connected'
+            });
+
+            await updateDoc(doc(db, "calls_history", currentCallId), { status: 'answered' });
+
+            document.getElementById('call-status-label').textContent = "Разговор";
+
+            onSnapshot(collection(callRef, "callerCandidates"), (snap) => {
+                snap.forEach(change => { peerConnection.addIceCandidate(new RTCIceCandidate(change.data())); });
+            });
+        };
+
+        document.getElementById('decline-call-btn').onclick = async () => {
+            if(currentCallId) {
+                const callRef = doc(db, "webrtc_calls", currentCallId);
+                const snap = await getDoc(callRef);
+                if(snap.exists()) {
+                    const status = snap.data().status === 'dialing' ? 'declined' : 'ended';
+                    await updateDoc(callRef, { status: status });
+                }
+            }
+            cleanCallResources("Вызов завершен");
+        };
+
+        function cleanCallResources(label) {
+            stopRingtone();
+            clearTimeout(activeCallTimer);
+            document.getElementById('call-status-label').textContent = label;
+            
+            setTimeout(() => {
+                document.getElementById('call-screen').classList.remove('active');
+                document.getElementById('video-layer').classList.add('hidden');
+                
+                if(peerConnection) { peerConnection.close(); peerConnection = null; }
+                if(localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+                
+                document.getElementById('remote-video').srcObject = null;
+                document.getElementById('local-video').srcObject = null;
+                currentCallId = null;
+            }, 1000);
+        }
+
+        // УПРАВЛЕНИЕ МИКРОФОНОМ И КАМЕРОЙ ВНУТРИ ВЫЗОВА
+        document.getElementById('mute-call-btn').onclick = () => {
+            if(!localStream) return;
+            isMuted = !isMuted;
+            localStream.getAudioTracks().forEach(t => t.enabled = !isMuted);
+            document.getElementById('mute-call-btn').classList.toggle('active-toggle', isMuted);
+            document.getElementById('mute-icon').textContent = isMuted ? "mic_off" : "mic";
+        };
+        
+        document.getElementById('toggle-video-btn').onclick = () => {
+            if(!localStream) return;
+            isVideoDisabled = !isVideoDisabled;
+            localStream.getVideoTracks().forEach(t => t.enabled = !isVideoDisabled);
+            document.getElementById('toggle-video-btn').classList.toggle('active-toggle', isVideoDisabled);
+        };
+
+        document.getElementById('flip-cam-btn').onclick = async () => {
+            if(!localStream) return;
+            isFrontCam = !isFrontCam;
+            const videoTrack = localStream.getVideoTracks()[0];
+            if(videoTrack) videoTrack.stop();
+            
+            const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: isFrontCam ? "user" : "environment" } });
+            const newVideoTrack = newStream.getVideoTracks()[0];
+            const sender = peerConnection.getSenders().find(s => s.track.kind === 'video');
+            if(sender) sender.replaceTrack(newVideoTrack);
+            
+            localStream.removeTrack(videoTrack);
+            localStream.addTrack(newVideoTrack);
+            document.getElementById('local-video').srcObject = localStream;
+        };
+
+        // ЖУРНАЛ ВЫЗОВОВ (Пункт 13)
+        function loadCallsHistory() {
+            const qCalls = query(collection(db, "calls_history"), orderBy("createdAt", "desc"));
+            onSnapshot(qCalls, (snap) => {
+                const root = document.getElementById('calls-log-list');
+                root.innerHTML = '';
+                
+                if(snap.empty) {
+                    root.innerHTML = '<p style="text-align:center; padding:40px; opacity:0.4;">История звонков пуста</p>';
+                    return;
+                }
+
+                snap.forEach((docSnap) => {
+                    const c = docSnap.data();
+                    // Показываем вызов, только если текущий юзер — участник звонка
+                    if(c.callerId !== myProfile.uid && c.receiverId !== myProfile.uid) return;
+
+                    const isIncoming = c.receiverId === myProfile.uid;
+                    const isMissed = c.status === 'missed';
+                    
+                    const row = document.createElement('div');
+                    row.className = 'call-log-row';
+                    
+                    let titleHTML = '';
+                    if(isIncoming) {
+                        titleHTML = `<h5 class="${isMissed ? 'missed-call-text' : ''}">Входящий от ${c.callerName}</h5>`;
+                    } else {
+                        titleHTML = `<h5>Исходящий к ${c.receiverName}</h5>`;
+                    }
+
+                    let timeString = '';
+                    if(c.createdAt) {
+                        timeString = c.createdAt.toDate().toLocaleString([], {month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit'});
+                    }
+
+                    row.innerHTML = `
+                        <div class="call-log-info">
+                            ${titleHTML}
+                            <p>${timeString} • ${c.type === 'video' ? 'Видео' : 'Аудио'}</p>
+                        </div>
+                        <span class="material-symbols-rounded call-log-icon">${c.type === 'video' ? 'videocam' : 'call'}</span>
+                    `;
+                    root.appendChild(row);
+                });
+            });
+        }
     </script>
 </body>
 </html>

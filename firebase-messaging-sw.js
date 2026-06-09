@@ -18,11 +18,31 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
     console.log('[firebase-messaging-sw.js] Получено фоновое уведомление: ', payload);
     
-    const notificationTitle = payload.notification?.title || "Новое сообщение в Ion";
+    // Обработка данных (на случай если твой сервер шлет кастомные поля в "data")
+    const senderName = payload.data?.senderName || "Неизвестный";
+    const msgType = payload.data?.type || "text";
+    
+    let bodyText = "У вас новое уведомление.";
+    
+    // Проверяем тип сообщения и форматируем текст
+    if (msgType === 'text') {
+        bodyText = payload.data?.text || payload.notification?.body || "Новое текстовое сообщение";
+    } else if (msgType === 'image') {
+        bodyText = "📷 Картинка";
+    } else if (msgType === 'audio') {
+        bodyText = "🎤 Голосовое сообщение";
+    } else {
+        // Запасной вариант, если пришел стандартный push-объект
+        bodyText = payload.notification?.body || "Новое сообщение";
+    }
+
+    const notificationTitle = payload.notification?.title || `Новое сообщение от ${senderName}`;
+    
     const notificationOptions = {
-        body: payload.notification?.body || "У вас новое уведомление.",
-        icon: 'https://raw.githubusercontent.com/LumoCreator/Ion/refs/heads/main/LOGO.svg', // Сюда можно поставить ссылку на иконку Ion Messenger
-        badge: 'https://via.placeholder.com/128'
+        body: bodyText,
+        // Обязательно загрузи PNG-версию логотипа на GitHub, SVG здесь не работают!
+        icon: 'https://raw.githubusercontent.com/LumoCreator/Ion/refs/heads/main/LOGO.png',
+        badge: 'https://raw.githubusercontent.com/LumoCreator/Ion/refs/heads/main/LOGO.png'
     };
 
     self.registration.showNotification(notificationTitle, notificationOptions);

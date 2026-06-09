@@ -41,8 +41,8 @@ messaging.onBackgroundMessage((payload) => {
     const notificationOptions = {
         body: bodyText,
         // Обязательно загрузи PNG-версию логотипа на GitHub, SVG здесь не работают!
-        icon: 'https://raw.githubusercontent.com/LumoCreator/Ion/refs/heads/main/LOGO.png',
-        badge: 'https://raw.githubusercontent.com/LumoCreator/Ion/refs/heads/main/LOGO.png'
+        icon: 'https://raw.githubusercontent.com/LumoCreator/Ion/refs/heads/main/LOGO.PNG',
+        badge: 'https://raw.githubusercontent.com/LumoCreator/Ion/refs/heads/main/LOGO.PNG'
     };
 
     self.registration.showNotification(notificationTitle, notificationOptions);

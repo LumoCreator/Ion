@@ -792,12 +792,15 @@
 
     <input type="file" id="status-file-input" accept="image/*" style="display:none">
 
-    <script type="module">
+        <script type="module">
+        // Импорт необходимых модулей Firebase SDK
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, query, where, orderBy, onSnapshot, serverTimestamp, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, onSnapshot, query, where, orderBy, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+        import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js";
 
+        // Конфигурация Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyA_nMOvRvO0mMjxt9nhmM_7fMdtM832pX4",
             authDomain: "messenger-ion.firebaseapp.com",
@@ -807,37 +810,35 @@
             appId: "1:904598269438:web:d6990731a5d09ce5e6e4af"
         };
 
+        // Инициализация сервисов
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const provider = new GoogleAuthProvider();
+        const storage = getStorage(app);
         
         let messaging = null;
         try {
             messaging = getMessaging(app);
         } catch (e) {
-            console.log("Уведомления не поддерживаются в этом браузере или окружении.");
+            console.log("FCM Messaging не поддерживается в этом браузере.");
         }
 
-        const ADMIN_EMAIL = "lumo.work.creator@gmail.com";
+        const provider = new GoogleAuthProvider();
+        const ADMIN_EMAIL = "tvf2232@gmail.com";
+
+        // Глобальное состояние приложения
         let myProfile = null;
         let currentChatUser = null;
         let currentChatId = null;
         let activeUnsubscribe = null;
-        let mediaRecorder = null;
-        let audioChunks = [];
-        let statusTimeout = null;
         let ringInterval = null;
         let toneOsc = null;
         let audioCtx = null;
 
-        // ВСТАВЬТЕ СЮДА ВАШИ ДАННЫЕ SERVICE ACCOUNT JSON ДЛЯ ОБЕСПЕЧЕНИЯ ПУШЕЙ ИЗ БРАУЗЕРА
-        const gServiceAccount = {
-            client_email: "firebase-adminsdk-fbsvc@messenger-ion.iam.gserviceaccount.com",
-            private_key: "-----BEGIN PRIVATE KEY-----MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDtb9sXjsu1DoIQ6fHXqTZUJgieRwlIN5CUyQ6WXpd2wyx9jjfg72D3Ey9Uwfu7iLf/g/A+zgcU8kWU78beZuzM304+z445qTrGoNUxb6LinFeCMuRMMXffKNCUEpeiewnIU3S1ixS5DxMPb7IA7kOC+KcgvVTdSkE9wWk+7Sv5exMb0D8ka/ciykiOWw0ToE2D8zF067L7t++W2hHD5EIA7WA7R3V9YzpY6VdlXNFGIVzFsx7V0OFwK3dyJJT7xsb5yxmbUXn69N4Z8tsDLMqSe7CVY7DmsImlLImXgtCI2VpmPZLH3rOkicY97dwJdruwPLkVfsYaZqJvn4Ps29gvAgMBAAECggEAC+eL80v+imE/aHxCSJg8TvN8FSJTgBlKPS3DdsG6gYLawulc8UoKqB03IZUx+yxgF5iLdKqq61+BtL6qmJqXDIu1GHVj4bI4SXoKBBbxhL/5GYTD+4VqR5zFQrK8g0RF+be2nQHZb2wmxzV+3xsTGXZlO+W0h7RiGUxp673oKYXHUIotmVbW4yjL9wGnFs9RtVGJ6/WafkJFyzxfsyl+z5jlest60r6zJaW8BheFzk8Mi1K1bnlqM0ApDJ0gtRUs9aArKt5WhnfOrD+/qE3jiMi5ZOTXK4tqGv8qFHyDlQrONmJ3tIdB5nrlLcEIZwCK7hdboqxRO5QjCGWC3mxSIQKBgQD8jvooSDRXI0pSvKp+9fIPvQfrSsqOQIo8lZzdFVF4aGEES/sNFlHsZqIjHcIwGE9mC+DAO2FO9X+FcRf/RpoSITq19CRJuit660uYmIxPylybDyek3o52REvqaOaDFv+WWtqKEF8GB+3zxEoZ7D4BpKJYI+czzkB/TtA96XppPwKBgQDwrCDzHXL8UjKeoZrMvdTBTj1wXSn03zlyx19eXcnCqnT4Fvra49loOwWHnK7tbqnXMvlMiUY3ZT2c7ueY4rdkuc1O+H9AmIgTuJwR61A2PE8hG2QZRMd4xgzHi1I/5piL9PwkTBByCAR7PmDjchSjOVur7HyzMc8ZDvtLRYtlEQKBgEiDwN3KBYUzc8aXtxhnA45zRw/O1KPNciN9DaII2fCJf7mdG0Mhsnn+6fTNOZFXmYyCQpDPO9xQ7sFgvHQmUFx+P/44UCb/Fjbf0j/JJRhP0REQY+CZqivY5jcy0WS4OMBx66eSlcYEhtTj+ibBRvhvzdEi1eJxCOHEvlPYcrY/AoGBALmwxRdu4FoH/aBhJbPUv4OKH2NDrmyNkqCZbV681D/LDsafzFr4s7R03XZdkKYG3Sn53VmNDM0O4vPjbHOMcV1Y8ix9FIm9Zjh5FonI2jGOZKsxnBDW/WSUwiVvvD0raQWLNsO2oHWq8/I3FcBHM98gETfcFfaYdqZp5b+U39FRAoGABjs7PEl2Z1FHNd7/gHb6OUyDnH6YKRYttupYPnFrN3uumfLPR4/69oOg4+eBJRfBylaBe/J9TlLDssvD/pPmNA7dcmk2WfjBKZ0l0Unv9c+1qgDbacqAj9hM3sg5BA8QkwO+lnHvvkQPDQ2yCo8JjlAXfO9+mYBgyQhceAwWNxc=-----END PRIVATE KEY-----
-",
-            project_id: "messenger-ion"
-        };
+        // Функция получения иконки верификации
+        function getVerifiedBadge(isVerified) {
+            return isVerified ? `<span class="material-symbols-rounded verified-icon" style="font-variation-settings: 'FILL' 1;">verified</span>` : '';
+        }
 
         // --- КРИПТОГРАФИЯ (ШИФРОВАНИЕ) ---
         function encryptData(text, key) {
@@ -848,13 +849,9 @@
             try {
                 const bytes = CryptoJS.AES.decrypt(cipherText, key);
                 return bytes.toString(CryptoJS.enc.Utf8);
-            } catch(e) {
-                return "";
+            } catch (e) {
+                return "[Ошибка дешифрования]";
             }
-        }
-
-        function getVerifiedBadge(isVerified) {
-            return isVerified ? `<span class="material-symbols-rounded verified-icon" style="font-variation-settings: 'FILL' 1;">verified</span>` : '';
         }
 
         // --- НАВИГАЦИЯ МЕЖДУ ЭКРАНАМИ ---
@@ -892,11 +889,11 @@
             navItems[target]?.classList.add('active');
         }
 
-        navItems.chats.onclick = () => switchSubView('chats');
-        navItems.admin.onclick = () => switchSubView('admin');
-        navItems.settings.onclick = () => switchSubView('settings');
+        if(navItems.chats) navItems.chats.onclick = () => switchSubView('chats');
+        if(navItems.admin) navItems.admin.onclick = () => switchSubView('admin');
+        if(navItems.settings) navItems.settings.onclick = () => switchSubView('settings');
 
-        // --- СЛУШАТЕЛЬ АВТОРИЗАЦИИ ---
+        // --- УПРАВЛЕНИЕ АВТОРИЗАЦИЕЙ ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const udoc = await getDoc(doc(db, "users", user.uid));
@@ -904,11 +901,14 @@
                     myProfile = udoc.data();
                     if(user.email === ADMIN_EMAIL) {
                         myProfile.isAdmin = true;
-                        navItems.admin.classList.remove('hidden');
+                        if(navItems.admin) navItems.admin.classList.remove('hidden');
                         listenToAdminRequests();
                     }
-                    document.getElementById('settings-big-avatar').src = myProfile.avatar || "https://via.placeholder.com/150";
-                    document.getElementById('settings-user-name').innerHTML = myProfile.name + getVerifiedBadge(myProfile.verified);
+                    const avatarImg = document.getElementById('settings-big-avatar');
+                    const nameHeader = document.getElementById('settings-user-name');
+                    if(avatarImg) avatarImg.src = myProfile.avatar || "https://via.placeholder.com/150";
+                    if(nameHeader) nameHeader.innerHTML = myProfile.name + getVerifiedBadge(myProfile.verified);
+                    
                     changeScreen('chats');
                     listenToChats();
                     listenForIncomingWebRTCCalls();
@@ -927,199 +927,92 @@
         document.getElementById('submit-register').onclick = async () => {
             const name = document.getElementById('reg-name').value.trim();
             const username = document.getElementById('reg-username').value.trim().toLowerCase();
-            if(!name || !username) return;
+            if(!name || !username) return alert("Заполните все поля!");
 
+            const user = auth.currentUser;
             myProfile = {
-                uid: auth.currentUser.uid,
-                name,
-                username,
-                avatar: auth.currentUser.photoURL || "",
-                inviteOnly: true,
-                verified: false
+                uid: user.uid,
+                name: name,
+                username: username,
+                avatar: user.photoURL || "https://via.placeholder.com/150",
+                verified: false,
+                email: user.email
             };
 
-            await setDoc(doc(db, "users", auth.currentUser.uid), myProfile);
-            if(auth.currentUser.email === ADMIN_EMAIL) location.reload();
+            await setDoc(doc(db, "users", user.uid), myProfile);
+            
+            if(user.email === ADMIN_EMAIL) {
+                await updateDoc(doc(db, "users", user.uid), { isAdmin: true });
+                myProfile.isAdmin = true;
+            }
+
+            const avatarImg = document.getElementById('settings-big-avatar');
+            const nameHeader = document.getElementById('settings-user-name');
+            if(avatarImg) avatarImg.src = myProfile.avatar;
+            if(nameHeader) nameHeader.innerHTML = myProfile.name + getVerifiedBadge(myProfile.verified);
+
             changeScreen('chats');
             listenToChats();
             listenForIncomingWebRTCCalls();
+            loadStatuses();
         };
 
-        // --- ЗАЯВКИ НА ВЕРИФИКАЦИЮ ---
-        document.getElementById('request-verification-btn').onclick = async () => {
-            if(myProfile.verified) return alert("Вы уже верифицированы!");
-            await setDoc(doc(db, "verification_requests", myProfile.uid), {
-                uid: myProfile.uid,
-                name: myProfile.name,
-                username: myProfile.username,
-                createdAt: serverTimestamp()
-            });
-            alert("Заявка отправлена админу!");
-        };
-
-        function listenToAdminRequests() {
-            onSnapshot(collection(db, "verification_requests"), (snap) => {
-                const list = document.getElementById('admin-requests-list');
-                list.innerHTML = '';
-                snap.forEach(docSnap => {
-                    const req = docSnap.data();
-                    const card = document.createElement('div');
-                    card.className = 'admin-req-card';
-                    card.innerHTML = `
-                        <div><b>${req.name}</b> (@${req.username})</div>
-                        <div style="display:flex; gap:8px;">
-                            <button class="m3-btn m3-btn-tonal" style="height:36px; padding:0 12px; flex:1;" id="approve-${req.uid}">Одобрить</button>
-                            <button class="m3-btn m3-btn-error" style="height:36px; padding:0 12px; flex:1;" id="reject-${req.uid}">Отклонить</button>
-                        </div>
-                    `;
-                    list.appendChild(card);
-
-                    document.getElementById(`approve-${req.uid}`).onclick = async () => {
-                        await updateDoc(doc(db, "users", req.uid), { verified: true });
-                        await deleteDoc(doc(db, "verification_requests", req.uid));
-                    };
-                    document.getElementById(`reject-${req.uid}`).onclick = async () => {
-                        await deleteDoc(doc(db, "verification_requests", req.uid));
-                    };
-                });
-            });
-        }
-
-        // --- FCM HTTP V1 ДВИЖОК ОТПРАВКИ ПУШЕЙ (БРАУЗЕРНЫЙ КЛИЕНТ) ---
-        function pemToArrayBuffer(pem) {
-            const b64 = pem.replace(/-----BEGIN PRIVATE KEY-----/, '').replace(/-----END PRIVATE KEY-----/, '').replace(/\s/g, '');
-            const byteString = atob(b64);
-            const buffer = new Uint8Array(byteString.length);
-            for (let i = 0; i < byteString.length; i++) {
-                buffer[i] = byteString.charCodeAt(i);
-            }
-            return buffer.buffer;
-        }
-
-        function base64url(source) {
-            let encoded = btoa(String.fromCharCode.apply(null, new Uint8Array(source)));
-            return encoded.replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-        }
-
-        async function generateGAuthToken(serviceAccount) {
-            const pkBuffer = pemToArrayBuffer(serviceAccount.private_key);
-            const privateKey = await crypto.subtle.importKey(
-                "pkcs8",
-                pkBuffer,
-                { name: "RSASSA-PKCS1-v1_5", hash: { name: "SHA-256" } },
-                false,
-                ["sign"]
-            );
-
-            const header = { alg: "RS256", typ: "JWT" };
-            const now = Math.floor(Date.now() / 1000);
-            const claim = {
-                iss: serviceAccount.client_email,
-                scope: "https://www.googleapis.com/auth/firebase.messaging",
-                aud: "https://oauth2.googleapis.com/token",
-                exp: now + 3600,
-                iat: now
-            };
-
-            const textEncoder = new TextEncoder();
-            const encodedHeader = base64url(textEncoder.encode(JSON.stringify(header)));
-            const encodedClaim = base64url(textEncoder.encode(JSON.stringify(claim)));
-            const stringToSign = encodedHeader + "." + encodedClaim;
-
-            const signature = await crypto.subtle.sign(
-                "RSASSA-PKCS1-v1_5",
-                privateKey,
-                textEncoder.encode(stringToSign)
-            );
-
-            const jwt = stringToSign + "." + base64url(signature);
-
-            const response = await fetch("https://oauth2.googleapis.com/token", {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`
-            });
-            const data = await response.json();
-            return data.access_token;
-        }
-
-        async function sendFCMNotification(targetToken, title, body) {
-            if (!gServiceAccount.client_email || gServiceAccount.client_email.includes("xxxxx")) {
-                console.log("Сервисный аккаунт не сконфигурирован. Пропуск отправки пуша.");
-                return;
-            }
-            try {
-                const token = await generateGAuthToken(gServiceAccount);
-                const url = `https://fcm.googleapis.com/v1/projects/${gServiceAccount.project_id}/messages:send`;
-                await fetch(url, {
-                    method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${token}`,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        message: {
-                            token: targetToken,
-                            notification: { title, body },
-                            data: { click_action: "FLUTTER_NOTIFICATION_CLICK" }
-                        }
-                    })
-                });
-                console.log("Пуш-уведомление успешно отправлено!");
-            } catch (err) {
-                console.error("Ошибка отправки пуша через HTTP v1:", err);
-            }
-        }
-
-        // --- ВКЛЮЧЕНИЕ УВЕДОМЛЕНИЙ НА УСТРОЙСТВЕ ---
-        document.getElementById('enable-notifications-btn').onclick = async () => {
-            if (!messaging) return alert("Не поддерживается браузером или отсутствует безопасное HTTPS соединение.");
+        // --- НАСТРОЙКА УВЕДОМЛЕНИЙ (PUSH) ---
+        document.getElementById('activate-push-btn').onclick = async () => {
+            if (!messaging) return alert("Пуш-уведомления не поддерживаются в этом браузере или отсутствует HTTPS.");
             try {
                 const permission = await Notification.requestPermission();
                 if (permission === 'granted') {
                     const baseFolder = '/Ion/';
                     const swPath = `${baseFolder}firebase-messaging-sw.js`;
-                    const registration = await navigator.serviceWorker.register(swPath, { scope: baseFolder });
+                    console.log("Регистрация Service Worker по пути:", swPath);
                     
+                    const registration = await navigator.serviceWorker.register(swPath, { scope: baseFolder });
                     const token = await getToken(messaging, { 
                         serviceWorkerRegistration: registration, 
                         vapidKey: 'BDMZCptUBR2oiY60HUyslo6cUV7q7FJSoQ5HUKRgNuiuLOjsldWedf0lE24Pj7ZVgVzaeYkzEZs_p1D7zsCkgs4' 
                     });
-
+                    
                     if (token) {
                         await updateDoc(doc(db, "users", myProfile.uid), { fcmToken: token });
-                        alert("Пуши успешно активированы!");
+                        alert("Уведомления успешно активированы!");
                     } else {
-                        alert("Не удалось сгенерировать пуш-токен.");
+                        alert("Не удалось сгенерировать токен. Проверьте файл sw.");
                     }
                 } else {
-                    alert("Вы отклонили запрос на показ уведомлений.");
+                    alert("Доступ к уведомлениям заблокирован пользователем.");
                 }
-            } catch (e){
-                console.error("Ошибка при подписке на уведомления:", e);
+            } catch (e) {
+                console.error("Ошибка активации пушей:", e);
                 alert("Ошибка: " + e.message);
             }
         };
 
-        // --- ПОИСК ПОЛЬЗОВАТЕЛЕЙ ---
+        // --- ПОИСК И СОЗДАНИЕ ЧАТОВ ---
         document.getElementById('fab-create-chat').onclick = () => {
             changeScreen('createChat');
             document.getElementById('search-username').value = '';
             document.getElementById('search-results').innerHTML = '';
         };
-        
+
         document.getElementById('back-to-chats').onclick = () => changeScreen('chats');
-        
+
         document.getElementById('search-username').oninput = async (e) => {
             const term = e.target.value.trim().toLowerCase();
             const resDiv = document.getElementById('search-results');
-            if(term.length < 2) { resDiv.innerHTML = ''; return; }
-            
-            const s = await getDocs(query(collection(db, "users"), where("username", ">=", term), where("username", "<=", term + '\uf8ff')));
+            if(term.length < 2) { 
+                resDiv.innerHTML = ''; 
+                return; 
+            }
+
+            const q = query(collection(db, "users"), where("username", ">=", term), where("username", "<=", term + '\uf8ff'));
+            const s = await getDocs(q);
             resDiv.innerHTML = '';
+
             s.forEach(udoc => {
                 const u = udoc.data();
                 if(u.uid === myProfile.uid) return;
+
                 const row = document.createElement('div');
                 row.className = 'chat-row';
                 row.innerHTML = `
@@ -1127,7 +1020,8 @@
                     <div class="chat-row-info">
                         <h4>${u.name}${getVerifiedBadge(u.verified)}</h4>
                         <p>@${u.username}</p>
-                    </div>`;
+                    </div>
+                `;
                 row.onclick = () => {
                     currentChatUser = u;
                     currentChatId = myProfile.uid < u.uid ? `${myProfile.uid}_${u.uid}` : `${u.uid}_${myProfile.uid}`;
@@ -1137,25 +1031,30 @@
             });
         };
 
-        // --- ДИАЛОГИ И ОКНО ЧАТА ---
+        // --- ОКНО ЧАТА И ПОЛУЧЕНИЕ СООБЩЕНИЙ ---
         async function openChatWindow() {
             changeScreen('chatWindow');
-            document.getElementById('chat-user-avatar').src = currentChatUser.avatar || "https://via.placeholder.com/150";
-            document.getElementById('chat-user-title').innerHTML = currentChatUser.name + getVerifiedBadge(currentChatUser.verified);
-            
+            document.getElementById('chat-window-title').innerHTML = currentChatUser.name + getVerifiedBadge(currentChatUser.verified);
             const container = document.getElementById('messages-container');
             container.innerHTML = '';
-            
+
             if(activeUnsubscribe) activeUnsubscribe();
 
+            const chatDoc = await getDoc(doc(db, "chats", currentChatId));
+            const inviteOverlay = document.getElementById('invite-send-overlay');
+            const bottomBar = document.getElementById('chat-bottom-bar');
+
+            if(currentChatUser.isPrivate && (!chatDoc.exists() || chatDoc.data().status !== 'active')) {
+                inviteOverlay.classList.remove('hidden');
+                bottomBar.classList.add('hidden');
+            } else {
+                inviteOverlay.classList.add('hidden');
+                bottomBar.classList.remove('hidden');
+            }
+
             const chatUnsub = onSnapshot(doc(db, "chats", currentChatId), (snap) => {
-                const overlay = document.getElementById('invite-send-overlay');
-                const bottomBar = document.getElementById('chat-bottom-bar');
-                if(!snap.exists() && currentChatUser.inviteOnly) {
-                    overlay.classList.remove('hidden');
-                    bottomBar.classList.add('hidden');
-                } else {
-                    overlay.classList.add('hidden');
+                if(snap.exists() && snap.data().status === 'active') {
+                    inviteOverlay.classList.add('hidden');
                     bottomBar.classList.remove('hidden');
                 }
             });
@@ -1167,8 +1066,8 @@
                     const isMe = m.senderId === myProfile.uid;
                     const wrap = document.createElement('div');
                     wrap.className = `msg-wrapper ${isMe ? 'me' : 'other'}`;
-                    let contentHTML = "";
                     
+                    let contentHTML = "";
                     if(m.type === 'text') {
                         contentHTML = `<p>${decryptData(m.payload, currentChatId)}</p>`;
                     } else if (m.type === 'image') {
@@ -1192,9 +1091,10 @@
         document.getElementById('btn-send-invite').onclick = async () => {
             await setDoc(doc(db, "chats", currentChatId), {
                 participants: [myProfile.uid, currentChatUser.uid],
-                status: 'active',
+                status: 'pending',
                 updatedAt: serverTimestamp()
             });
+            alert("Запрос на переписку отправлен!");
         };
 
         document.getElementById('back-from-chat').onclick = () => {
@@ -1202,7 +1102,7 @@
             changeScreen('chats');
         };
 
-        // --- ОТПРАВКА СУЩНОСТЕЙ (ТЕКСТ, ИЗОБРАЖЕНИЕ, ГОЛОС) ---
+        // --- ОТПРАВКА ДАННЫХ (ТЕКСТ, ФОТО, ГОЛОС) ---
         const msgInput = document.getElementById('message-input');
         const sendBtn = document.getElementById('send-btn');
         const voiceBtn = document.getElementById('voice-record-btn');
@@ -1225,63 +1125,60 @@
                 lastMessage: encryptData(type === 'text' ? rawData : `[${type}]`, currentChatId),
                 updatedAt: serverTimestamp()
             }, { merge: true });
-            
+
             await addDoc(collection(db, "chats", currentChatId, "messages"), {
                 senderId: myProfile.uid,
                 type: type,
                 payload: encrypted,
                 createdAt: serverTimestamp()
             });
-
-            // Триггер пуш-уведомления через новый протокол HTTP v1
-            if (currentChatUser.fcmToken) {
-                const alertBody = type === 'text' ? rawData : `Отправил вам ${type === 'image' ? 'изображение' : 'голосовое сообщение'}`;
-                sendFCMNotification(currentChatUser.fcmToken, myProfile.name, alertBody);
-            }
         }
 
-        sendBtn.onclick = () => {
-            const t = msgInput.value.trim();
-            if(t){
-                sendPayload('text', t);
-                msgInput.value = '';
-                msgInput.oninput();
-            }
+        sendBtn.onclick = async () => {
+            const text = msgInput.value.trim();
+            if(!text) return;
+            msgInput.value = '';
+            sendBtn.classList.add('hidden');
+            voiceBtn.classList.remove('hidden');
+            await sendPayload('text', text);
         };
 
         document.getElementById('attach-btn').onclick = () => document.getElementById('file-input').click();
-        document.getElementById('file-input').onchange = (e) => {
+        document.getElementById('file-input').onchange = async (e) => {
             const file = e.target.files[0];
             if(!file) return;
-            if (!confirm("Вы уверены, что хотите отправить выбранное изображение?")) { e.target.value = ''; return; }
-            
-            const r = new FileReader();
-            r.onload = (ev) => sendPayload('image', ev.target.result);
-            r.readAsDataURL(file);
+            const fileRef = ref(storage, `chats/${currentChatId}/${Date.now()}_${file.name}`);
+            await uploadBytes(fileRef, file);
+            const url = await getDownloadURL(fileRef);
+            await sendPayload('image', url);
         };
 
-        // --- ЗАПИСЬ АУДИОСООБЩЕНИЙ ---
+        // Запись голосовых сообщений
+        let mediaRecorder = null;
+        let audioChunks = [];
         voiceBtn.onclick = async () => {
-            if (!mediaRecorder || mediaRecorder.state === "inactive") {
+            if(!mediaRecorder) {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 mediaRecorder = new MediaRecorder(stream);
-                audioChunks = [];
                 mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-                mediaRecorder.onstop = () => {
-                    const blob = new Blob(audioChunks, { type: 'audio/ogg; codecs=opus' });
-                    const r = new FileReader();
-                    r.onload = (ev) => sendPayload('audio', ev.target.result);
-                    r.readAsDataURL(blob);
+                mediaRecorder.onstop = async () => {
+                    const blob = new Blob(audioChunks, { type: 'audio/ogg' });
+                    audioChunks = [];
+                    const fileRef = ref(storage, `chats/${currentChatId}/${Date.now()}_voice.ogg`);
+                    await uploadBytes(fileRef, blob);
+                    const url = await getDownloadURL(fileRef);
+                    await sendPayload('audio', url);
                 };
                 mediaRecorder.start();
                 voiceBtn.classList.add('recording');
             } else {
                 mediaRecorder.stop();
+                mediaRecorder = null;
                 voiceBtn.classList.remove('recording');
             }
         };
 
-        // --- ОБНОВЛЕНИЕ СПИСКА ЧАТОВ ---
+        // --- СПИСОК АКТИВНЫХ ЧАТОВ ---
         function listenToChats() {
             onSnapshot(query(collection(db, "chats"), where("participants", "array-contains", myProfile.uid)), async (snapshot) => {
                 const listDiv = document.getElementById('chats-list');
@@ -1291,11 +1188,11 @@
                     const chatId = chatDoc.id;
                     const partnerId = c.participants.find(id => id !== myProfile.uid);
                     if(!partnerId) continue;
-                    
+
                     const pSnap = await getDoc(doc(db, "users", partnerId));
                     if(!pSnap.exists()) continue;
                     const pData = pSnap.data();
-                    
+
                     let decText = c.lastMessage ? (decryptData(c.lastMessage, chatId) || "Сообщение") : "Чат открыт";
                     const row = document.createElement('div');
                     row.className = 'chat-row';
@@ -1304,7 +1201,8 @@
                         <div class="chat-row-info">
                             <h4>${pData.name}${getVerifiedBadge(pData.verified)}</h4>
                             <p>${decText}</p>
-                        </div>`;
+                        </div>
+                    `;
                     row.onclick = () => {
                         currentChatUser = pData;
                         currentChatId = chatId;
@@ -1323,80 +1221,81 @@
                     <div class="status-item add-new" id="btn-add-status">
                         <div class="status-avatar-wrapper"><span class="material-symbols-rounded">add</span></div>
                         <span class="status-name">Мой статус</span>
-                    </div>`;
+                    </div>
+                `;
                 document.getElementById('btn-add-status').onclick = () => document.getElementById('status-file-input').click();
                 
                 const now = Date.now();
                 snap.forEach(async (docSnap) => {
                     const data = docSnap.data();
                     const createdTime = data.createdAt ? data.createdAt.toDate().getTime() : now;
+                    
                     if (now - createdTime > 30 * 60 * 1000) {
                         await deleteDoc(doc(db, "statuses", docSnap.id));
                         return;
                     }
+
                     const el = document.createElement('div');
                     el.className = 'status-item';
                     el.innerHTML = `
                         <div class="status-avatar-wrapper"><img class="status-avatar" src="${data.avatar || 'https://via.placeholder.com/150'}"></div>
-                        <span class="status-name">${data.name}</span>`;
+                        <span class="status-name">${data.name}</span>
+                    `;
                     el.onclick = () => openStatusViewer(data);
                     statusDiv.appendChild(el);
                 });
             });
         }
 
-        document.getElementById('status-file-input').onchange = (e) => {
+        document.getElementById('status-file-input').onchange = async (e) => {
             const file = e.target.files[0];
             if(!file) return;
-            const r = new FileReader();
-            r.onload = async (ev) => {
-                await addDoc(collection(db, "statuses"), {
-                    uid: myProfile.uid,
-                    name: myProfile.name,
-                    avatar: myProfile.avatar,
-                    image: ev.target.result,
-                    createdAt: serverTimestamp()
-                });
-                alert("Статус опубликован на 30 минут!");
-            };
-            r.readAsDataURL(file);
+            const fileRef = ref(storage, `statuses/${myProfile.uid}_${Date.now()}`);
+            await uploadBytes(fileRef, file);
+            const url = await getDownloadURL(fileRef);
+            
+            await addDoc(collection(db, "statuses"), {
+                uid: myProfile.uid,
+                name: myProfile.name,
+                avatar: url,
+                createdAt: serverTimestamp()
+            });
+            alert("Статус опубликован на 30 минут!");
         };
 
-        function openStatusViewer(statusData) {
-            const modal = document.getElementById('status-viewer');
-            const fill = document.getElementById('status-progress-fill');
-            document.getElementById('status-view-avatar').src = statusData.avatar || "https://via.placeholder.com/150";
-            document.getElementById('status-view-name').textContent = statusData.name;
-            document.getElementById('status-view-img').src = statusData.image;
-            
+        function openStatusViewer(data) {
+            const modal = document.getElementById('status-viewer-modal');
+            document.getElementById('status-viewer-name').textContent = data.name;
+            document.getElementById('status-viewer-img').src = data.avatar;
             modal.classList.add('active');
-            fill.style.width = '0%';
-            setTimeout(() => { fill.style.width = '100%'; }, 50);
             
-            if(statusTimeout) clearTimeout(statusTimeout);
-            statusTimeout = setTimeout(closeStatusViewer, 30000);
+            const fill = document.getElementById('status-progress-fill');
+            fill.style.transition = 'none';
+            fill.style.width = '0%';
+            setTimeout(() => {
+                fill.style.transition = 'width 30s linear';
+                fill.style.width = '100%';
+            }, 50);
+
+            const timeout = setTimeout(() => modal.classList.remove('active'), 30000);
+            document.getElementById('status-viewer-close').onclick = () => {
+                clearTimeout(timeout);
+                modal.classList.remove('active');
+            };
         }
 
-        function closeStatusViewer() {
-            document.getElementById('status-viewer').classList.remove('active');
-            if(statusTimeout) clearTimeout(statusTimeout);
-        }
-        document.getElementById('status-view-close').onclick = closeStatusViewer;
-
-        // --- РИНГТОНЫ И СИСТЕМНЫЕ ЗВУКИ ---
+        // --- СИСТЕМА ЗВУКОВЫХ СИГНАЛОВ И ВЫЗОВОВ ---
         function playOutgoingTone() {
             if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             let on = true;
             ringInterval = setInterval(() => {
-                if(on){
+                if(on) {
                     toneOsc = audioCtx.createOscillator();
+                    toneOsc.type = 'sine';
                     toneOsc.frequency.setValueAtTime(425, audioCtx.currentTime);
-                    let gainNode = audioCtx.createGain();
-                    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                    toneOsc.connect(gainNode);
-                    gainNode.connect(audioCtx.destination);
+                    toneOsc.connect(audioCtx.destination);
                     toneOsc.start();
-                    setTimeout(() => { try{ toneOsc.stop(); }catch(e){} }, 1000);
+                    setTimeout(() => { try { toneOsc.stop(); } catch(e){} }, 1000);
                 }
                 on = !on;
             }, 2000);
@@ -1423,10 +1322,10 @@
 
         function stopAllSounds() {
             clearInterval(ringInterval);
-            if(toneOsc) { try{ toneOsc.stop(); }catch(e){} }
+            if(toneOsc) { try { toneOsc.stop(); } catch(e){} }
         }
 
-        // --- WEBRTC ЗВОНКИ ---
+        // --- WEBRTC СВЯЗЬ И ЗВОНКИ ---
         let peerConnection = null;
         let localStream = null;
         let callDocRef = null;
@@ -1437,50 +1336,44 @@
         const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
         async function initMedia(withVideo) {
-            const constr = { 
-                audio: true, 
-                video: withVideo ? { facingMode: isFrontCam ? "user" : "environment" } : false 
+            const constr = {
+                audio: true,
+                video: withVideo ? { facingMode: isFrontCam ? "user" : "environment" } : false
             };
             localStream = await navigator.mediaDevices.getUserMedia(constr);
             peerConnection = new RTCPeerConnection(rtcConfig);
             localStream.getTracks().forEach(t => peerConnection.addTrack(t, localStream));
-            
+
             if(withVideo) {
                 document.getElementById('video-layer').classList.remove('hidden');
                 document.getElementById('local-video').srcObject = localStream;
-                document.getElementById('flip-cam-btn').classList.remove('hidden');
                 document.getElementById('toggle-video-btn').classList.remove('hidden');
-            } else {
-                document.getElementById('video-layer').classList.add('hidden');
+                document.getElementById('flip-cam-btn').classList.remove('hidden');
             }
 
-            peerConnection.ontrack = (e) => {
-                stopAllSounds();
-                document.getElementById('call-status').textContent = "В эфире 🔒";
-                if(withVideo) {
-                    document.getElementById('remote-video').srcObject = e.streams[0];
-                } else {
-                    document.getElementById('remote-audio').srcObject = e.streams[0];
-                }
+            peerConnection.ontrack = (event) => {
+                const remoteVid = document.getElementById('remote-video');
+                if(remoteVid) remoteVid.srcObject = event.streams[0];
             };
 
-            peerConnection.onicecandidate = (e) => {
-                if(e.candidate && callDocRef) {
-                    addDoc(collection(callDocRef, "candidates"), e.candidate.toJSON());
+            peerConnection.onicecandidate = (event) => {
+                if(event.candidate && callDocRef) {
+                    addDoc(collection(callDocRef, "iceCandidates"), event.candidate.toJSON());
                 }
             };
         }
 
-        async function startCall(withVideo) {
+        async function makeCall(isVideo) {
             callDocRef = doc(collection(db, "calls"));
+            currentChatId = myProfile.uid < currentChatUser.uid ? `${myProfile.uid}_${currentChatUser.uid}` : `${currentChatUser.uid}_${myProfile.uid}`;
+            
             document.getElementById('call-avatar').src = currentChatUser.avatar || "https://via.placeholder.com/150";
             document.getElementById('call-name').textContent = currentChatUser.name;
-            document.getElementById('call-status').textContent = "Вызов...";
-            document.getElementById('accept-call-btn').classList.add('hidden');
+            document.getElementById('call-status').textContent = isVideo ? "Видеовызов..." : "Аудиовызов...";
             document.getElementById('call-screen').classList.add('active');
             
             playOutgoingTone();
-            await initMedia(withVideo);
+            await initMedia(isVideo);
 
             const offer = await peerConnection.createOffer();
             await peerConnection.setLocalDescription(offer);
@@ -1488,50 +1381,67 @@
             await setDoc(callDocRef, {
                 callerId: myProfile.uid,
                 receiverId: currentChatUser.uid,
-                status: 'ringing',
-                offer: { type: offer.type, sdp: offer.sdp }
+                chatId: currentChatId,
+                offer: { type: offer.type, sdp: offer.sdp, video: isVideo },
+                status: 'dialing'
             });
 
             onSnapshot(callDocRef, async (snap) => {
                 const data = snap.data();
-                if (data?.answer && !peerConnection.currentRemoteDescription) {
+                if(!data) return;
+                if(data.status === 'answered' && data.answer) {
                     stopAllSounds();
-                    await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+                    document.getElementById('call-status').textContent = "Разговор";
+                    if(!peerConnection.currentRemoteDescription) {
+                        await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+                    }
                 }
-                if (data?.status === 'ended') endCallLocal();
+                if(data.status === 'ended') {
+                    endCallLocally();
+                }
             });
 
-            onSnapshot(collection(callDocRef, "candidates"), snap => {
+            onSnapshot(collection(callDocRef, "iceCandidates"), (snap) => {
                 snap.docChanges().forEach(change => {
-                    if (change.type === 'added') {
+                    if(change.type === 'added') {
                         peerConnection.addIceCandidate(new RTCIceCandidate(change.doc.data()));
                     }
                 });
             });
         }
 
+        if(document.getElementById('call-voice-btn')) {
+            document.getElementById('call-voice-btn').onclick = () => makeCall(false);
+        }
+        if(document.getElementById('call-video-btn')) {
+            document.getElementById('call-video-btn').onclick = () => makeCall(true);
+        }
+
         function listenForIncomingWebRTCCalls() {
-            onSnapshot(query(collection(db, "calls"), where("receiverId", "batch-contains", [myProfile.uid])), snap => {
-                snap.docChanges().forEach(async change => {
-                    if (change.type === 'added' || change.type === 'modified') {
-                        const data = change.doc.data();
-                        if (data.status === 'ringing') {
-                            callDocRef = change.doc.ref;
-                            playIncomingRingtone();
-                            const cSnap = await getDoc(doc(db, "users", data.callerId));
-                            if (cSnap.exists()) {
-                                const caller = cSnap.data();
-                                document.getElementById('call-avatar').src = caller.avatar || "https://via.placeholder.com/150";
-                                document.getElementById('call-name').textContent = caller.name;
-                                document.getElementById('call-status').textContent = data.offer.video ? "Входящий видеовызов..." : "Входящий аудиовызов...";
-                                document.getElementById('accept-call-btn').classList.remove('hidden');
-                                document.getElementById('call-screen').classList.add('active');
-                                document.getElementById('call-screen').setAttribute('data-video', data.offer.video);
-                            }
+            onSnapshot(query(collection(db, "calls"), where("receiverId", "==", myProfile.uid), where("status", "==", "dialing")), (snap) => {
+                if(!snap.empty) {
+                    const cSnap = snap.docs[0];
+                    callDocRef = cSnap.ref;
+                    const data = cSnap.data();
+                    
+                    onSnapshot(callDocRef, (s) => {
+                        if(s.exists() && s.data().status === 'ended') endCallLocally();
+                    });
+
+                    playIncomingRingtone();
+                    
+                    getDoc(doc(db, "users", data.callerId)).then(uSnap => {
+                        if(uSnap.exists()) {
+                            const caller = uSnap.data();
+                            document.getElementById('call-avatar').src = caller.avatar || "https://via.placeholder.com/150";
+                            document.getElementById('call-name').textContent = caller.name;
+                            document.getElementById('call-status').textContent = data.offer.video ? "Входящий видеовызов..." : "Входящий аудиовызов...";
+                            document.getElementById('accept-call-btn').classList.remove('hidden');
+                            document.getElementById('call-screen').classList.add('active');
+                            document.getElementById('call-screen').setAttribute('data-video', data.offer.video);
                         }
-                        if (data.status === 'ended') endCallLocal();
-                    }
-                });
+                    });
+                }
             });
         }
 
@@ -1544,41 +1454,47 @@
             await initMedia(hasVideo);
             const callData = (await getDoc(callDocRef)).data();
             await peerConnection.setRemoteDescription(new RTCSessionDescription(callData.offer));
-            
+
             const answer = await peerConnection.createAnswer();
             await peerConnection.setLocalDescription(answer);
-            
-            await updateDoc(callDocRef, { 
+
+            await updateDoc(callDocRef, {
                 answer: { type: answer.type, sdp: answer.sdp },
-                status: 'connected'
+                status: 'answered'
             });
 
-            onSnapshot(collection(callDocRef, "candidates"), snap => {
+            onSnapshot(collection(callDocRef, "iceCandidates"), (snap) => {
                 snap.docChanges().forEach(change => {
-                    if (change.type === 'added') {
+                    if(change.type === 'added') {
                         peerConnection.addIceCandidate(new RTCIceCandidate(change.doc.data()));
                     }
                 });
             });
+            document.getElementById('call-status').textContent = "Разговор";
         };
 
-        async function endCallLocal() {
+        function endCallLocally() {
             stopAllSounds();
-            if(localStream) localStream.getTracks().forEach(t => t.stop());
-            if(peerConnection) peerConnection.close();
-            peerConnection = null;
-            localStream = null;
+            if(localStream) {
+                localStream.getTracks().forEach(t => t.stop());
+                localStream = null;
+            }
+            if(peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+            }
             document.getElementById('call-screen').classList.remove('active');
             document.getElementById('video-layer').classList.add('hidden');
+            document.getElementById('accept-call-btn').classList.add('hidden');
+            callDocRef = null;
         }
 
         document.getElementById('decline-call-btn').onclick = async () => {
-            if(callDocRef) await updateDoc(callDocRef, { status: 'ended' });
-            endCallLocal();
+            if(callDocRef) {
+                await updateDoc(callDocRef, { status: 'ended' });
+            }
+            endCallLocally();
         };
-
-        document.getElementById('call-voice-btn').onclick = () => startCall(false);
-        document.getElementById('call-video-btn').onclick = () => startCall(true);
 
         document.getElementById('mute-call-btn').onclick = () => {
             if(!localStream) return;
@@ -1587,7 +1503,7 @@
             document.getElementById('mute-call-btn').classList.toggle('active-toggle', isMuted);
             document.getElementById('mute-icon').textContent = isMuted ? "mic_off" : "mic";
         };
-        
+
         document.getElementById('toggle-video-btn').onclick = () => {
             if(!localStream) return;
             isVideoDisabled = !isVideoDisabled;
@@ -1595,26 +1511,68 @@
             document.getElementById('toggle-video-btn').classList.toggle('active-toggle', isVideoDisabled);
             document.getElementById('cam-icon').textContent = isVideoDisabled ? "videocam_off" : "videocam";
         };
-        
+
         document.getElementById('flip-cam-btn').onclick = async () => {
             if(!localStream) return;
             isFrontCam = !isFrontCam;
             
-            const videoTrack = localStream.getVideoTracks()[0]; 
-            if(videoTrack) videoTrack.stop(); 
+            const videoTrack = localStream.getVideoTracks()[0];
+            if(videoTrack) videoTrack.stop();
             
-            const newStream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: isFrontCam ? "user" : "environment" } 
+            const newStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: isFrontCam ? "user" : "environment" }
             });
             
             const newVideoTrack = newStream.getVideoTracks()[0];
-            const sender = peerConnection.getSenders().find(s => s.track.kind === 'video');
+            const sender = peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
             if(sender) sender.replaceTrack(newVideoTrack);
             
-            localStream.removeTrack(videoTrack); 
+            localStream.removeTrack(videoTrack);
             localStream.addTrack(newVideoTrack);
             document.getElementById('local-video').srcObject = localStream;
         };
+
+        // --- АДМИН-ПАНЕЛЬ (ЗАЯВКИ НА ВЕРИФИКАЦИЮ) ---
+        document.getElementById('request-verification-btn').onclick = async () => {
+            await addDoc(collection(db, "verificationRequests"), {
+                uid: myProfile.uid,
+                name: myProfile.name,
+                username: myProfile.username,
+                createdAt: serverTimestamp()
+            });
+            alert("Заявка на верификацию успешно отправлена!");
+        };
+
+        function listenToAdminRequests() {
+            const listContainer = document.getElementById('admin-requests-list');
+            if(!listContainer) return;
+            onSnapshot(collection(db, "verificationRequests"), (snap) => {
+                listContainer.innerHTML = '';
+                snap.forEach(docSnap => {
+                    const req = docSnap.data();
+                    const card = document.createElement('div');
+                    card.className = 'admin-req-card';
+                    card.innerHTML = `
+                        <div>
+                            <strong>${req.name}</strong> (@${req.username})
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button class="m3-btn m3-btn-filled" style="height:36px; padding:0 12px; font-size:13px;" id="approve-${docSnap.id}">Одобрить</button>
+                            <button class="m3-btn m3-btn-error" style="height:36px; padding:0 12px; font-size:13px;" id="reject-${docSnap.id}">Отклонить</button>
+                        </div>
+                    `;
+                    listContainer.appendChild(card);
+
+                    document.getElementById(`approve-${docSnap.id}`).onclick = async () => {
+                        await updateDoc(doc(db, "users", req.uid), { verified: true });
+                        await deleteDoc(doc(db, "verificationRequests", docSnap.id));
+                    };
+                    document.getElementById(`reject-${docSnap.id}`).onclick = async () => {
+                        await deleteDoc(doc(db, "verificationRequests", docSnap.id));
+                    };
+                });
+            });
+        }
     </script>
 </body>
 </html>

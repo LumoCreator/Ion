@@ -13,7 +13,7 @@
 
     <style>
         :root {
-            --md-primary: #0b57d0; 
+            --md-primary: #0b57d0;
             --md-on-primary: #ffffff;
             --md-primary-container: #d3e3fd; 
             --md-on-primary-container: #041e49;
@@ -30,7 +30,7 @@
         }
 
         * { 
-            box-sizing: border-box; 
+            box-sizing: border-box;
             margin: 0;
             padding: 0; 
             font-family: 'Plus Jakarta Sans', sans-serif; 
@@ -39,14 +39,14 @@
         }
         
         body { 
-            background-color: var(--md-surface); 
+            background-color: var(--md-surface);
             color: var(--md-on-surface); 
             overflow: hidden; 
             height: 100dvh; 
             width: 100vw;
             position: fixed; 
             top: 0; 
-            left: 0; 
+            left: 0;
         }
 
         .screen { 
@@ -69,19 +69,19 @@
         }
         
         .screen.active { 
-            opacity: 1; 
+            opacity: 1;
             transform: translateX(0) scale(1); 
             pointer-events: auto; 
             z-index: 2;
         }
 
         .sub-view { 
-            display: none; 
+            display: none;
             flex-direction: column; 
             flex: 1; 
             min-height: 0; 
             overflow: hidden;
-            height: 100%; 
+            height: 100%;
         }
         
         .sub-view.active { 
@@ -89,7 +89,7 @@
         }
 
         .m3-top-bar { 
-            height: 64px; 
+            height: 64px;
             min-height: 64px; 
             background: rgba(251, 253, 248, 0.95);
             backdrop-filter: blur(16px); 
@@ -97,12 +97,12 @@
             align-items: center; 
             justify-content: space-between; 
             padding: 0 16px; 
-            z-index: 10; 
+            z-index: 10;
             border-bottom: 1px solid rgba(0,0,0,0.05);
         }
         
         .m3-top-bar h2 { 
-            font-size: 22px; 
+            font-size: 22px;
             font-weight: 600; 
             display: flex; 
             align-items: center;
@@ -110,7 +110,7 @@
         }
         
         .m3-icon-btn { 
-            width: 44px; 
+            width: 44px;
             height: 44px; 
             border-radius: 50%; 
             border: none;
@@ -124,7 +124,7 @@
         }
         
         .m3-icon-btn:active { 
-            transform: scale(0.85); 
+            transform: scale(0.85);
             background-color: var(--md-surface-variant);
         }
         
@@ -144,17 +144,17 @@
         }
         
         .m3-btn-filled { 
-            background-color: var(--md-primary); 
+            background-color: var(--md-primary);
             color: var(--md-on-primary);
         }
         
         .m3-btn-tonal { 
-            background-color: var(--md-primary-container); 
+            background-color: var(--md-primary-container);
             color: var(--md-on-primary-container);
         }
         
         .m3-btn-error { 
-            background-color: var(--md-error-container); 
+            background-color: var(--md-error-container);
             color: var(--md-error);
         }
         
@@ -178,18 +178,18 @@
         }
 
         .m3-navigation-bar { 
-            height: 80px; 
+            height: 80px;
             min-height: 80px; 
             background-color: #f3f4f8; 
             display: flex; 
             justify-content: space-around;
             align-items: center; 
             padding-bottom: 4px; 
-            width: 100%; 
+            width: 100%;
         }
         
         .m3-nav-item { 
-            display: flex; 
+            display: flex;
             flex-direction: column;
             align-items: center; 
             cursor: pointer; 
@@ -199,16 +199,16 @@
         }
         
         .m3-nav-icon-wrapper { 
-            height: 32px; 
+            height: 32px;
             width: 64px; 
             border-radius: 16px; 
             display: flex; 
             align-items: center;
-            justify-content: center; 
+            justify-content: center;
         }
         
         .m3-nav-item.active { 
-            color: var(--md-on-surface); 
+            color: var(--md-on-surface);
             font-weight: 600;
         }
         
@@ -217,7 +217,7 @@
         }
 
         .auth-card { 
-            background: white; 
+            background: white;
             padding: 40px 32px; 
             border-radius: 32px; 
             width: 90%;
@@ -228,25 +228,25 @@
         }
         
         .m3-input-group input { 
-            width: 100%; 
+            width: 100%;
             height: 56px; 
             background-color: var(--md-surface-variant); 
             border: none;
             border-radius: 16px 16px 4px 4px; 
             border-bottom: 2px solid var(--md-outline); 
             padding: 0 16px; 
-            font-size: 16px; 
+            font-size: 16px;
             margin-bottom: 16px; 
             outline: none;
         }
 
         .status-bar { 
-            display: flex; 
+            display: flex;
             overflow-x: auto; 
             padding: 12px 16px; 
             gap: 16px;
             border-bottom: 1px solid var(--md-surface-variant); 
-            scrollbar-width: none; 
+            scrollbar-width: none;
         }
         
         .status-bar::-webkit-scrollbar { 
@@ -254,21 +254,21 @@
         }
         
         .status-item { 
-            display: flex; 
+            display: flex;
             flex-direction: column; 
             align-items: center; 
             gap: 4px; 
             cursor: pointer;
             width: 64px; 
-            flex-shrink: 0; 
+            flex-shrink: 0;
         }
         
         .status-avatar-wrapper { 
-            width: 60px; 
+            width: 60px;
             height: 60px; 
             border-radius: 50%;
             padding: 2px; 
-            border: 2px solid var(--md-primary); 
+            border: 2px solid var(--md-primary);
         }
         
         .status-item.add-new .status-avatar-wrapper { 
@@ -280,49 +280,49 @@
         }
         
         .status-avatar { 
-            width: 100%; 
+            width: 100%;
             height: 100%;
             border-radius: 50%; 
             object-fit: cover; 
         }
         
         .status-name { 
-            font-size: 11px; 
+            font-size: 11px;
             white-space: nowrap; 
             overflow: hidden;
             text-overflow: ellipsis; 
             width: 100%; 
-            text-align: center; 
+            text-align: center;
         }
 
         .chats-list-container { 
-            flex: 1; 
+            flex: 1;
             overflow-y: auto;
         }
         
         .chat-row { 
-            display: flex; 
+            display: flex;
             align-items: center; 
             padding: 16px 20px; 
             gap: 16px;
             cursor: pointer; 
-            width: 100%; 
+            width: 100%;
         }
         
         .avatar { 
-            width: 52px; 
+            width: 52px;
             height: 52px; 
             border-radius: 50%;
             object-fit: cover; 
         }
         
         .chat-row-info { 
-            flex: 1; 
+            flex: 1;
             min-width: 0;
         }
         
         .chat-row-info h4 { 
-            font-size: 17px; 
+            font-size: 17px;
             font-weight: 600; 
             display: flex; 
             align-items: center; 
@@ -330,7 +330,7 @@
         }
         
         .chat-row-info p { 
-            font-size: 14px; 
+            font-size: 14px;
             color: var(--md-on-surface-variant); 
             white-space: nowrap; 
             overflow: hidden;
@@ -338,16 +338,16 @@
         }
 
         .verified-icon { 
-            color: #1d9bf0; 
+            color: #1d9bf0;
             font-size: 18px; 
             margin-left: 4px; 
             font-style: normal;
             display: inline-flex; 
-            align-items: center; 
+            align-items: center;
         }
 
         .chat-container { 
-            flex: 1; 
+            flex: 1;
             overflow-y: auto; 
             padding: 16px;
             background-color: var(--md-bg-chat); 
@@ -355,49 +355,49 @@
         }
         
         .msg-wrapper { 
-            display: flex; 
+            display: flex;
             flex-direction: column; 
             max-width: 78%;
             margin-bottom: 8px; 
         }
         
         .msg-wrapper.me { 
-            align-self: flex-end; 
+            align-self: flex-end;
             align-items: flex-end;
         }
         
         .msg-wrapper.other { 
-            align-self: flex-start; 
+            align-self: flex-start;
             align-items: flex-start;
         }
         
         .bubble { 
-            padding: 10px 14px; 
+            padding: 10px 14px;
             border-radius: 20px; 
             font-size: 15px; 
             word-break: break-word;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05); 
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
         
         .me .bubble { 
-            background-color: var(--md-primary-container); 
+            background-color: var(--md-primary-container);
             border-bottom-right-radius: 4px;
         }
         
         .other .bubble { 
-            background-color: white; 
+            background-color: white;
             border-bottom-left-radius: 4px;
         }
         
         .bubble img { 
-            max-width: 100%; 
+            max-width: 100%;
             border-radius: 12px; 
             display: block; 
             margin-bottom: 4px;
         }
         
         .audio-player { 
-            height: 36px; 
+            height: 36px;
             outline: none; 
             max-width: 200px; 
             margin-top: 4px;
@@ -415,13 +415,13 @@
         }
         
         .input-field-container { 
-            flex: 1; 
+            flex: 1;
             background-color: var(--md-surface-variant); 
             border-radius: 24px; 
             padding: 0 16px;
             display: flex; 
             align-items: center; 
-            height: 48px; 
+            height: 48px;
         }
         
         .input-field-container input { 
@@ -441,7 +441,7 @@
         }
         
         .record-btn.recording { 
-            background: var(--md-error); 
+            background: var(--md-error);
             transform: scale(1.2);
             animation: pulse 1s infinite; 
         }
@@ -471,14 +471,14 @@
         }
         
         .status-progress-bar { 
-            position: absolute; 
+            position: absolute;
             top: calc(10px + env(safe-area-inset-top)); 
             left: 10px; 
             right: 10px;
             height: 4px; 
             background: rgba(255,255,255,0.3); 
             border-radius: 2px; 
-            overflow: hidden; 
+            overflow: hidden;
         }
         
         .status-progress-fill { 
@@ -501,13 +501,13 @@
         }
         
         .status-img-content { 
-            max-width: 100%; 
+            max-width: 100%;
             max-height: 80dvh; 
             object-fit: contain;
         }
 
         .call-overlay { 
-            position: fixed; 
+            position: fixed;
             top: 0; 
             left: 0; 
             width: 100vw; 
@@ -517,12 +517,12 @@
             z-index: 9999; 
             display: flex; 
             flex-direction: column; 
-            align-items: center; 
+            align-items: center;
             justify-content: space-between; 
             opacity: 0; 
             pointer-events: none; 
             transition: 0.4s;
-            padding: calc(20px + env(safe-area-inset-top)) 20px calc(40px + env(safe-area-inset-bottom)) 20px; 
+            padding: calc(20px + env(safe-area-inset-top)) 20px calc(40px + env(safe-area-inset-bottom)) 20px;
         }
         
         .call-overlay.active { 
@@ -531,23 +531,23 @@
         }
         
         .video-container-layer { 
-            position: absolute; 
+            position: absolute;
             top: 0; 
             left: 0; 
             width: 100%;
             height: 100%; 
             z-index: 1; 
-            background: #000; 
+            background: #000;
         }
         
         .remote-video-stream { 
-            width: 100%; 
+            width: 100%;
             height: 100%;
             object-fit: cover; 
         }
         
         .local-video-stream { 
-            position: absolute; 
+            position: absolute;
             top: calc(20px + env(safe-area-inset-top)); 
             right: 20px;
             width: 110px; 
@@ -555,18 +555,18 @@
             object-fit: cover; 
             border-radius: 16px; 
             border: 2px solid rgba(255,255,255,0.5); 
-            z-index: 10; 
+            z-index: 10;
             background: #222;
         }
         
         .call-ui-data { 
-            z-index: 5; 
+            z-index: 5;
             text-align: center; 
             margin-top: 40px;
         }
         
         .call-avatar { 
-            width: 140px; 
+            width: 140px;
             height: 140px; 
             border-radius: 50%; 
             object-fit: cover; 
@@ -574,13 +574,13 @@
         }
         
         .call-actions { 
-            margin-bottom: 20px; 
+            margin-bottom: 20px;
             display: flex; 
             align-items: center; 
             gap: 16px; 
             z-index: 100;
             flex-wrap: wrap; 
-            justify-content: center; 
+            justify-content: center;
         }
         
         .btn-call-circle { 
@@ -598,17 +598,17 @@
         }
         
         .btn-call-circle.active-toggle { 
-            background: white; 
+            background: white;
             color: black;
         }
         
         .btn-call-decline { 
-            background-color: #ff4a4a; 
+            background-color: #ff4a4a;
             color: white;
         }
         
         .btn-call-accept { 
-            background-color: #34a853; 
+            background-color: #34a853;
             color: white;
         }
         
@@ -617,7 +617,7 @@
         }
 
         .chat-overlay-status { 
-            position: absolute; 
+            position: absolute;
             top: 0; 
             left: 0; 
             width: 100%; 
@@ -627,20 +627,20 @@
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            justify-content: center; 
+            justify-content: center;
             padding: 32px; 
             text-align: center;
         }
         
         .admin-req-card { 
-            background: white; 
+            background: white;
             margin: 12px 16px; 
             padding: 16px; 
             border-radius: 16px; 
             display: flex;
             flex-direction: column; 
             gap: 12px; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
     </style>
 </head>
@@ -801,7 +801,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, query, where, orderBy, onSnapshot, serverTimestamp, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js";
+        import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyA_nMOvRvO0mMjxt9nhmM_7fMdtM832pX4",
@@ -819,7 +819,7 @@
         
         let messaging;
         try { 
-            messaging = getMessaging(app); 
+            messaging = getMessaging(app);
         } catch(e) {
             console.error("Ошибка инициализации Messaging:", e);
         }
@@ -832,13 +832,49 @@
 
         const ADMIN_EMAIL = "tvf2232@gmail.com";
 
+        // ГЛОБАЛЬНАЯ РЕГИСТРАЦИЯ SERVICE WORKER (ДЛЯ ФОНОВЫХ УВЕДОМЛЕНИЙ)
+        let swRegistration = null;
+        if ('serviceWorker' in navigator) {
+            const baseFolder = '/Ion/';
+            const swPath = `${baseFolder}firebase-messaging-sw.js`;
+            navigator.serviceWorker.register(swPath, { scope: baseFolder })
+                .then(reg => {
+                    swRegistration = reg;
+                    console.log("Service Worker успешно зарегистрирован в фоне:", reg.scope);
+                }).catch(err => {
+                    console.error("Ошибка регистрации Service Worker:", err);
+                });
+        }
+
+        // ПРОСЛУШИВАНИЕ УВЕДОМЛЕНИЙ В АКТИВНОМ ПРИЛОЖЕНИИ
+        if (messaging) {
+            onMessage(messaging, (payload) => {
+                console.log("Сообщение получено в активном приложении: ", payload);
+                const senderName = payload.data?.senderName || "Неизвестный";
+                const msgType = payload.data?.type || "text";
+                
+                let bodyText = "У вас новое сообщение";
+                if (msgType === 'text') bodyText = payload.data?.text || payload.notification?.body || "Текстовое сообщение";
+                else if (msgType === 'image') bodyText = "📷 Картинка";
+                else if (msgType === 'audio') bodyText = "🎤 Голосовое сообщение";
+
+                // Показываем нативный пуш даже если приложение открыто (опционально)
+                if (Notification.permission === 'granted') {
+                    new Notification(`Новое сообщение от ${senderName}`, {
+                        body: bodyText,
+                        icon: 'https://raw.githubusercontent.com/LumoCreator/Ion/refs/heads/main/LOGO.png'
+                    });
+                }
+            });
+        }
+
         // --- ДЕШИФРАТОР E2EE С FALLBACK ---
         function getE2EEKey(roomId) { 
-            return CryptoJS.SHA256(roomId).toString(); 
+            return CryptoJS.SHA256(roomId).toString();
         }
         
         function encryptData(data, roomId) { 
-            return CryptoJS.AES.encrypt(data, getE2EEKey(roomId)).toString(); 
+            return CryptoJS.AES.encrypt(data, getE2EEKey(roomId)).toString();
         }
         
         function decryptData(cipherText, roomId) {
@@ -875,13 +911,11 @@
             admin: document.getElementById('view-admin-sub'),
             settings: document.getElementById('view-settings-sub')
         };
-        
         const navItems = {
             chats: document.getElementById('nav-item-chats'),
             admin: document.getElementById('nav-item-admin'),
             settings: document.getElementById('nav-item-settings')
         };
-        
         function switchSubView(target) {
             Object.keys(subs).forEach(k => {
                 subs[k]?.classList.remove('active');
@@ -910,7 +944,7 @@
 
                     document.getElementById('settings-big-avatar').src = myProfile.avatar || "https://via.placeholder.com/150";
                     document.getElementById('settings-user-name').innerHTML = myProfile.name + getVerifiedBadge(myProfile.verified);
-                    
+                   
                     changeScreen('chats');
                     listenToChats();
                     listenForIncomingWebRTCCalls();
@@ -926,7 +960,6 @@
         document.getElementById('google-sign-in').onclick = () => signInWithPopup(auth, provider);
         
         document.getElementById('settings-logout-btn').onclick = () => signOut(auth);
-        
         document.getElementById('submit-register').onclick = async () => {
             const name = document.getElementById('reg-name').value.trim();
             const username = document.getElementById('reg-username').value.trim().toLowerCase();
@@ -952,7 +985,6 @@
         // --- ЗАЯВКИ НА ВЕРИФИКАЦИЮ ---
         document.getElementById('request-verification-btn').onclick = async () => {
             if(myProfile.verified) return alert("Вы уже верифицированы!");
-            
             await setDoc(doc(db, "verification_requests", myProfile.uid), {
                 uid: myProfile.uid,
                 name: myProfile.name,
@@ -1000,38 +1032,28 @@
             });
         }
 
-        // --- УВЕДОМЛЕНИЯ (ИСПРАВЛЕНО ДЛЯ GITHUB PAGES) ---
+        // --- УВЕДОМЛЕНИЯ ---
         document.getElementById('enable-notifications-btn').onclick = async () => {
             if (!messaging) return alert("Не поддерживается браузером или не защищённое соединение (HTTPS)");
+            if (!swRegistration) return alert("Service Worker еще не загрузился, подождите пару секунд и повторите");
+            
             try {
                 const permission = await Notification.requestPermission();
                 if (permission === 'granted') {
-                    
-                    // 1. Автоматически определяем подпапку на GitHub Pages (папка /Ion/)
-                    const baseFolder = '/Ion/';
-                    const swPath = `${baseFolder}firebase-messaging-sw.js`;
-
-                    console.log("Регистрируем Service Worker по пути:", swPath);
-
-                    // 2. Принудительно регистрируем наш сервис-воркер с правильным путями
-                    const registration = await navigator.serviceWorker.register(swPath, {
-                        scope: baseFolder
-                    });
-
-                    // 3. Передаем твой реальный VAPID ключ
+                    // Используем уже зарегистрированный SW
                     const token = await getToken(messaging, { 
-                        serviceWorkerRegistration: registration, 
+                        serviceWorkerRegistration: swRegistration, 
                         vapidKey: 'BDMZCptUBR2oiY60HUyslo6cUV7q7FJSoQ5HUKRgNuiuLOjsldWedf0lE24Pj7ZVgVzaeYkzEZs_p1D7zsCkgs4' 
                     });
 
                     if (token) {
                         await updateDoc(doc(db, "users", myProfile.uid), { fcmToken: token });
-                        alert("Пуши активны!");
+                        alert("Пуши успешно активированы!");
                     } else {
-                        alert("Не удалось получить пуш-токен. Проверь наличие файла firebase-messaging-sw.js в репозитории.");
+                        alert("Не удалось получить пуш-токен.");
                     }
                 } else {
-                    alert("Вы запретили уведомления в браузере.");
+                    alert("Вы запретили уведомления в настройках браузера.");
                 }
             } catch (e){
                 console.error("Ошибка при получении пуш-токена:", e);
@@ -1041,7 +1063,7 @@
 
         // --- ПОИСК ---
         document.getElementById('fab-create-chat').onclick = () => { 
-            changeScreen('createChat'); 
+            changeScreen('createChat');
             document.getElementById('search-username').value=''; 
             document.getElementById('search-results').innerHTML=''; 
         };
@@ -1053,7 +1075,7 @@
             const resDiv = document.getElementById('search-results');
             
             if(term.length < 2) { 
-                resDiv.innerHTML = ''; 
+                resDiv.innerHTML = '';
                 return; 
             }
             
@@ -1099,7 +1121,6 @@
 
             const chatRef = doc(db, "chats", currentChatId);
             const chatSnap = await getDoc(chatRef);
-            
             if (!chatSnap.exists() && currentChatUser.inviteOnly) {
                 document.getElementById('invite-send-overlay').classList.remove('hidden');
             } else {
@@ -1114,7 +1135,7 @@
                     document.getElementById('chat-call-buttons').style.display = 'flex';
                 }
             });
-            
+
             const msgUnsub = onSnapshot(query(collection(db, "chats", currentChatId, "messages"), orderBy("createdAt", "asc")), (snapshot) => {
                 container.innerHTML = '';
                 snapshot.forEach(docSnap => {
@@ -1150,7 +1171,7 @@
         };
         
         document.getElementById('back-from-chat').onclick = () => { 
-            if(activeUnsubscribe) activeUnsubscribe(); 
+            if(activeUnsubscribe) activeUnsubscribe();
             changeScreen('chats'); 
         };
 
@@ -1161,17 +1182,16 @@
 
         msgInput.oninput = () => {
             if(msgInput.value.trim().length > 0) { 
-                sendBtn.classList.remove('hidden'); 
+                sendBtn.classList.remove('hidden');
                 voiceBtn.classList.add('hidden'); 
             } else { 
-                sendBtn.classList.add('hidden'); 
+                sendBtn.classList.add('hidden');
                 voiceBtn.classList.remove('hidden'); 
             }
         };
 
         async function sendPayload(type, rawData) {
             const encrypted = encryptData(rawData, currentChatId);
-            
             await setDoc(doc(db, "chats", currentChatId), {
                 participants: [myProfile.uid, currentChatUser.uid],
                 status: 'active',
@@ -1188,16 +1208,15 @@
         }
 
         sendBtn.onclick = () => { 
-            const t = msgInput.value.trim(); 
+            const t = msgInput.value.trim();
             if(t){ 
-                sendPayload('text', t); 
+                sendPayload('text', t);
                 msgInput.value = ''; 
                 msgInput.oninput(); 
             } 
         };
 
         document.getElementById('attach-btn').onclick = () => document.getElementById('file-input').click();
-        
         document.getElementById('file-input').onchange = (e) => {
             const file = e.target.files[0];
             if(!file) return;
@@ -1249,7 +1268,7 @@
         
         function stopVoiceRecord() { 
             if(mediaRecorder && mediaRecorder.state === 'recording') { 
-                mediaRecorder.stop(); 
+                mediaRecorder.stop();
                 voiceBtn.classList.remove('recording'); 
             } 
         }
@@ -1259,7 +1278,7 @@
             onSnapshot(query(collection(db, "chats"), where("participants", "array-contains", myProfile.uid)), async (snapshot) => {
                 const listDiv = document.getElementById('chats-list'); 
                 listDiv.innerHTML = '';
-                
+          
                 for (const chatDoc of snapshot.docs) {
                     const c = chatDoc.data(); 
                     const chatId = chatDoc.id;
@@ -1268,7 +1287,7 @@
                     
                     const pSnap = await getDoc(doc(db, "users", partnerId)); 
                     if(!pSnap.exists()) continue;
-                    
+         
                     const pData = pSnap.data();
                     let decText = c.lastMessage ? (decryptData(c.lastMessage, chatId) || "Сообщение") : "Чат открыт";
                     
@@ -1280,9 +1299,8 @@
                             <h4>${pData.name}${getVerifiedBadge(pData.verified)}</h4>
                             <p>${decText}</p>
                         </div>`;
-                    
                     row.onclick = () => { 
-                        currentChatUser = pData; 
+                        currentChatUser = pData;
                         currentChatId = chatId; 
                         openChatWindow(); 
                     };
@@ -1295,7 +1313,6 @@
         // --- СТАТУСЫ С УДАЛЕНИЕМ ЧЕРЕЗ 30 МИНУТ ---
         async function loadStatuses() {
             const statusDiv = document.getElementById('status-bar-container');
-            
             onSnapshot(collection(db, "statuses"), (snap) => {
                 statusDiv.innerHTML = `
                     <div class="status-item add-new" id="btn-add-status">
@@ -1306,6 +1323,7 @@
                 document.getElementById('btn-add-status').onclick = () => document.getElementById('status-file-input').click();
                 
                 const now = Date.now();
+        
                 snap.forEach(async (docSnap) => {
                     const data = docSnap.data();
                     const createdTime = data.createdAt ? data.createdAt.toDate().getTime() : now;
@@ -1320,7 +1338,6 @@
                     el.innerHTML = `
                         <div class="status-avatar-wrapper"><img class="status-avatar" src="${data.avatar || 'https://via.placeholder.com/150'}"></div>
                         <span class="status-name">${data.name}</span>`;
-                    
                     el.onclick = () => openStatusViewer(data);
                     statusDiv.appendChild(el);
                 });
@@ -1337,7 +1354,6 @@
             
             modal.classList.add('active');
             fill.style.width = '0%';
-            
             setTimeout(() => { fill.style.width = '100%'; }, 50);
 
             if(statusTimeout) clearTimeout(statusTimeout);
@@ -1422,7 +1438,6 @@
         let isFrontCam = true; 
         let isMuted = false; 
         let isVideoDisabled = false;
-        
         const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
         
         async function initMedia(withVideo) {
@@ -1434,7 +1449,6 @@
             peerConnection = new RTCPeerConnection(rtcConfig);
             
             localStream.getTracks().forEach(t => peerConnection.addTrack(t, localStream));
-
             if(withVideo) {
                 document.getElementById('video-layer').classList.remove('hidden');
                 document.getElementById('local-video').srcObject = localStream;
@@ -1456,7 +1470,7 @@
             
             peerConnection.onicecandidate = (e) => { 
                 if(e.candidate && callDocRef) {
-                    addDoc(collection(callDocRef, "candidates"), e.candidate.toJSON()); 
+                    addDoc(collection(callDocRef, "candidates"), e.candidate.toJSON());
                 }
             };
         }
@@ -1471,7 +1485,6 @@
 
             playDialingTone();
             await initMedia(hasVideo);
-            
             const offer = await peerConnection.createOffer();
             await peerConnection.setLocalDescription(offer);
             
@@ -1552,18 +1565,18 @@
         };
 
         document.getElementById('decline-call-btn').onclick = async () => { 
-            if (callDocRef) await deleteDoc(callDocRef); 
+            if (callDocRef) await deleteDoc(callDocRef);
             closeActiveCall(); 
         };
         
         function closeActiveCall() {
             stopAllSounds();
             if (peerConnection) { 
-                peerConnection.close(); 
+                peerConnection.close();
                 peerConnection = null; 
             }
             if (localStream) { 
-                localStream.getTracks().forEach(t => t.stop()); 
+                localStream.getTracks().forEach(t => t.stop());
                 localStream = null; 
             }
             document.getElementById('call-screen').classList.remove('active');
@@ -1599,7 +1612,6 @@
             const newStream = await navigator.mediaDevices.getUserMedia({ 
                 video: { facingMode: isFrontCam ? "user" : "environment" } 
             });
-            
             const newVideoTrack = newStream.getVideoTracks()[0];
             const sender = peerConnection.getSenders().find(s => s.track.kind === 'video');
             if(sender) sender.replaceTrack(newVideoTrack);
